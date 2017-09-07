@@ -1,5 +1,5 @@
 
-function parse_answer(anwer)
+function parse_answer(answer)
   -- Parses nimsuggest answer and returns it as a structure.
   if answer == nil then return end
   local suggestion = {}
