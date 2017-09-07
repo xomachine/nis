@@ -8,7 +8,8 @@ local function debugme(tab)
 end
 
 function on_open(file)
-  if file.path:sub(-3, 3) == "nim" or true then
+  if file == nil then return end
+  if file.path:sub(-3) == "nim" then
     if sessions[file.path] then
       local cur = sessions[file.path].refcounter
       sessions[file.path].refcounter = cur + 1
@@ -16,8 +17,8 @@ function on_open(file)
       sessions[file.path] = Session.new(file.path)
       sessions[file.path].refcounter = 1
     end
+    debugme(sessions[file.path])
   end
-  debugme(sessions[file.path])
 end
 
 function on_close(file)
