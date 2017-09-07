@@ -1,10 +1,24 @@
 local Session = require('nis.sessions')
+require('nis.commands')
 local sessions = {} -- a table "filepath" - session
 
 local function debugme(tab)
   for k, v in pairs(tab) do
     vis:message(k..": "..tostring(v))
   end
+end
+local function current_session()
+  if vis.win and vis.win.file then
+    return sessions[vis.win.file.path]
+  end
+end
+
+function get_help()
+  current_session():help()
+end
+
+function suggest_key()
+  current_session():suggest()
 end
 
 function on_open(file)
