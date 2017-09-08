@@ -10,6 +10,7 @@ local Session = {
 function Session:close()
   -- Closes current nimsuggest session and removes all
   -- related temporary files
+  vis:message("Closing session for "..self.file)
   self:command("quit")
   self.read_fd:close()
   self.write_fd:close()
@@ -29,6 +30,7 @@ function Session:command(name, add_position)
     if vis.win.file.modified then
       --save file as temporary
       dirty = os.tmpname()
+      --vis:message("Made dirtyfile: "..dirty)
       local dd = assert(io.open(dirty, "w"))
       for line in vis.win.file:lines_iterator() do
         dd:write(line.."\n")
