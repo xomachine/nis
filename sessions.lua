@@ -47,13 +47,13 @@ function Session:command(name, add_position)
     local path = vis.win.file.path
     local sel = vis.win.selection
     filepos = " "..path..';'..(dirty or path)..':'..
-              tostring(sel.line)..':'..tostring(sel.col-1)
+              tostring(sel.line)..':'..tostring(sel.col)
   end
   local request = name..filepos.."\n"
   self.write_fd:write(request)
   self.write_fd:flush() -- needed to push request forward to nimsuggest
   --vis:message("Sent to nimsuggest: "..request)
-  os.execute("sleep 0.2") -- give nimsuggest a time to handle request
+  os.execute("sleep 0.2") -- give nimsuggest time to handle request
   if dirty then os.remove(dirty) end
   self:cycle() -- read answers if any
 end
