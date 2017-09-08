@@ -24,6 +24,12 @@ function Session:command(name, add_position)
   -- sending command.
   -- Result of the command will returned asyncroniusly
   -- via "NISGOTANSWER" event.
+  if io.type(self.write_fd) ~= "file" then
+    vis:message("Nimsuggest crashed somehow! Restarting...")
+    local file = self.file
+    self:close()
+    self = Session.new(file)
+  end
   local filepos = ""
   local dirty = false
   if add_position then
@@ -63,9 +69,9 @@ function Session.new(filepath)
   -- so we need to remove it first to make fifo
   local success, exitcode, signal = os.execute("mkfifo "..newtable.fifo_path)
   assert(success)
-  newtable.write_fd = assert(io.popen('bash -c \'nimsuggest '..
-    newtable.file..' 2>&1 | while read n; do echo "$n" > '..
-    newtable.fifo_path..'; done\'', 'w'))
+  newtable.write_fd = assert(io.popen('trap "" SIGINT && grep -v $\'\\e\' | (nimsuggest --stdin --v2 '..
+    newtable.file..' 2>&1 || echo "Crash!") | while read n; do echo "$n" > '..
+    newtable.fifo_path..'; done', 'w'))
   newtable.read_fd = assert(io.open(newtable.fifo_path, "r"))
   return newtable
 end
@@ -80,6 +86,14 @@ function Session:cycle()
   repeat
     rawsuggestion = self.read_fd:read("*l")
     if rawsuggestion ~= nil then
+      if rawsuggestion == "Crash!" then
+        vis:message("Nimsuggest crashed!")
+        local file = self.file
+        local refcounter = self.refcounter
+        self:close()
+        self = Session.new(file)
+        self.refcounter = refcounter
+      end
       --vis:message("Got answer: "..rawsuggestion)
       tries = tries + 1
       local suggestion = parse_answer(rawsuggestion)
