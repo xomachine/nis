@@ -100,7 +100,7 @@ end
 
 local function helper(suggestions, window)
   local suggestion = suggestions[1]
-  vis:info(tostring(suggestion.comment))
+  --vis:info(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
   vis:message(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
 end
 
