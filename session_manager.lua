@@ -13,12 +13,33 @@ local function current_session()
   end
 end
 
+local function on_brace(session)
+  vis:insert("()")
+  vis.win.selection.pos = vis.win.selection.pos - 1
+  session:context()
+  return false
+end
+
 function get_help()
-  current_session():help()
+  local session = current_session()
+  if session == nil then return end
+  session:help()
 end
 
 function suggest_key()
-  current_session():suggest()
+  local session = current_session()
+  if session == nil then return end
+  session:suggest()
+end
+
+local keyactions = {
+  ['('] = on_brace,
+}
+
+function dispatch_input(key)
+  local session = current_session()
+  if session == nil then return end
+  if keyactions[key] then return keyactions[key](session) end
 end
 
 function on_open(file)
