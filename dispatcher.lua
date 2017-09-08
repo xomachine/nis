@@ -104,11 +104,22 @@ local function helper(suggestions, window)
   vis:message(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
 end
 
+local function arghelper(suggestions, window)
+  if #suggestions == 1 then
+    vis:info(suggestions[1].type:match("%((.*)%)"))
+  else
+    for suggestion in pairs(suggestions) do
+      vis:message(suggestion.type)
+    end
+  end
+end
+
 local responces = {
   -- a table with functions which should be called on certain suggestion type
   -- encounter
   suggest = suggest,
   help = helper,
+  context = arghelper,
 }
 
 function dispatch(filepath, request, suggestions)
