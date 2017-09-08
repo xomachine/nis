@@ -43,7 +43,7 @@ function dispatch_input(key)
 end
 
 function on_open(file)
-  if file == nil then return end
+  if file == nil or file.path == nil then return end
   if file.path:sub(-3) == "nim" then
     if sessions[file.path] then
       local cur = sessions[file.path].refcounter
