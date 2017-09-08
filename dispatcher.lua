@@ -78,7 +78,9 @@ local suggest_colors = {
 
 local function suggest(suggestions, window)
   local file = window.file
-  local pattern = file:content(file:text_object_word(window.selection.pos-1))
+  local pattern =
+    file:content(file:text_object_word(window.selection.pos-1)) or ""
+  if pattern:match("([a-zA-Z0-9])") == nil then pattern = "" end
   local variants = ""
   for _, suggestion in pairs(suggestions) do
     variants = variants..(#variants>0 and "," or "")..suggestion.name
