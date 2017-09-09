@@ -4,7 +4,7 @@ local Session = {
   file = nil,
   write_fd = nil,
   read_fd = nil,
-  fifo_path = nil,
+  outfifo = nil,
 }
 
 function Session:close()
@@ -12,9 +12,9 @@ function Session:close()
   -- related temporary files
   vis:message("Closing session for "..self.file)
   self:command("quit")
-  self.read_fd:close()
   self.write_fd:close()
-  os.remove(self.fifo_path)
+  self.read_fd:close()
+  os.remove(self.outfifo)
 end
 
 function Session:command(name, add_position)
@@ -58,21 +58,33 @@ function Session:command(name, add_position)
   self:cycle() -- read answers if any
 end
 
+local function mktmpfifo()
+  -- Creates new temporary fifo queue and returns its path
+  -- Queue should be removed explicitly after use via os.remove
+  local name = os.tmpname()
+  os.remove(name)
+  local success, exitcode, signal = os.execute("mkfifo "..name)
+  if success then
+    return name
+  else
+    error("Failed to create fifo pipe!")
+  end
+end
+
 function Session.new(filepath)
   -- Creates new nimsuggest session for given file.
   -- This constructor either launches nimsuggest and
   -- prepares all necessary async IO handlers.
   local newtable = Session
   newtable.file = filepath
-  newtable.fifo_path = os.tmpname()
-  os.execute("rm "..newtable.fifo_path) -- os automaticaly creates file,
-  -- so we need to remove it first to make fifo
-  local success, exitcode, signal = os.execute("mkfifo "..newtable.fifo_path)
-  assert(success)
-  newtable.write_fd = assert(io.popen('trap "" SIGINT && grep -v $\'\\e\' | (nimsuggest --stdin --v2 '..
-    newtable.file..' 2>&1 || echo "Crash!") | while read n; do echo "$n" > '..
-    newtable.fifo_path..'; done', 'w'))
-  newtable.read_fd = assert(io.open(newtable.fifo_path, "r"))
+  newtable.outfifo = mktmpfifo()
+  -- setsid is necessary to prevent SIGINT forwarding from vis when Ctrl-C
+  -- pressed
+  newtable.write_fd = assert(io.popen(
+    'setsid -w bash -p -c \'(nimsuggest --stdin --v2 '..newtable.file..
+    ' 2>&1 || echo "Crash!") | while read n; do echo "$n" >'..
+    newtable.outfifo..' ; done\'', 'w'))
+  newtable.read_fd = assert(io.open(newtable.outfifo, "r"))
   return newtable
 end
 
