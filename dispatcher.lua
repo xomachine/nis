@@ -41,7 +41,7 @@ end
 local function helper(suggestions, window)
   local suggestion = suggestions[1]
   --vis:info(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
-  vis:message(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
+  silent_print(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
 end
 
 local function arghelper(suggestions, window)
@@ -49,7 +49,7 @@ local function arghelper(suggestions, window)
     vis:info(suggestions[1].type:match("%((.*)%)"))
   else
     for suggestion in pairs(suggestions) do
-      vis:message(suggestion.type)
+      silent_print(suggestion.type)
     end
   end
 end
