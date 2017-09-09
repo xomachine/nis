@@ -1,4 +1,3 @@
-
 function parse_answer(answer)
   -- Parses nimsuggest answer and returns it as a structure.
   if answer == nil then return end
@@ -25,6 +24,6 @@ function parse_answer(answer)
     return
   end
   suggestion.line = tonumber(suggestion.line)
-  suggestion.column = tonumber(suggestion.column)
+  suggestion.column = tonumber(suggestion.column) + 1
   return suggestion
 end
