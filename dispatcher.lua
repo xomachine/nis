@@ -1,4 +1,4 @@
-local colors, suggest_glyphs, suggest_colors = require('nis.graphic')
+local graphic = require('nis.graphic')
 local function suggest(suggestions, window)
   local file = window.file
   local pattern =
@@ -7,9 +7,9 @@ local function suggest(suggestions, window)
   local variants = ""
   for _, suggestion in pairs(suggestions) do
     variants = variants..(#variants>0 and "\n" or "")..
-               (suggest_colors[suggestion.skind] or "").."|"..
-               (suggest_glyphs[suggestion.skind] or "U").."|"..colors.LightGray..
-               " "..suggestion.name..": "..suggestion.type
+               (graphic.associations[suggestion.skind] or "").."|"..
+               (graphic.glyphs[suggestion.skind] or "U").."|"..
+               graphic.colors.LightGray.." "..suggestion.name..": "..suggestion.type
   end
   local empty = {start = 0, finish = 0}
   local state, result, _ = vis:pipe(file, empty, "echo -e '"..variants..
