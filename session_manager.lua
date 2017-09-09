@@ -21,6 +21,13 @@ local function on_brace(session)
   return true
 end
 
+local function suggest_dot(session)
+  vis:insert(".")
+  session:suggest()
+  return true
+end
+
+
 function get_help()
   local session = current_session()
   if session == nil then return end
@@ -35,6 +42,7 @@ end
 
 local keyactions = {
   ['('] = on_brace,
+  ['.'] = suggest_dot,
 }
 
 function dispatch_input(key)
