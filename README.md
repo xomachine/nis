@@ -5,9 +5,9 @@ The Vis plugin that extends Nim language support.
 
 ## Features
 * Autocompletion on Ctrl+Space (or **:suggest** command, or after dot symbol)
-* Calltips at the bottom of the editor then '(' is typed
-* Search for identifier under cursor definition on **:nimtodef** command
-* Code under cursor documentation viewer on **:nimhelp** command
+* Calltips at the bottom of the editor when '(' is typed
+* Search for the identifier under cursor definition on **:nimtodef** command
+* The code under cursor documentation viewer on **:nimhelp** command
 
 *Other features coming soon... or not so soon.*
 
