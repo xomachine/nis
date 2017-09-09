@@ -24,12 +24,12 @@ local function suggest(suggestions, window)
     local head = stripped:sub(1, #pattern)
     if head ~= pattern then
       silent_print(head.." ~= "..pattern)
-      vis.win.selection.pos = wordobject.start
+      window.selection.pos = wordobject.start
       vis:replace(head)
       local todel = #pattern - #head
       if todel > 0 then
         local after = vis.win.selection.pos
-        vis.win.file:delete({start = pos, finish = after + todel})
+        file:delete({start = after, finish = after + todel})
       end
     end
     local residue = stripped:sub(#pattern+1)
