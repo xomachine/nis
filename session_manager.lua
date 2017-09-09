@@ -22,6 +22,11 @@ local function suggest_dot(session)
   return true
 end
 
+function goto_def()
+  local session = current_session()
+  if session == nil then return end
+  session:goto_definition()
+end
 
 function get_help()
   local session = current_session()

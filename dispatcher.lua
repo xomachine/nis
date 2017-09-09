@@ -58,12 +58,22 @@ local function arghelper(suggestions, window)
   end
 end
 
+local function deffinder(suggestions, window)
+  local suggestion = suggestions[1]
+  if suggestion.file ~= window.file.path then
+    --open the file
+    vis:command("open "..suggestion.file)
+  end
+  vis.win.selection:to(suggestion.line, suggestion.column)
+end
+
 local responces = {
   -- a table with functions which should be called on certain suggestion type
   -- encounter
   suggest = suggest,
   help = helper,
   context = arghelper,
+  gotodef = deffinder,
 }
 
 function dispatch(filepath, request, suggestions)
