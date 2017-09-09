@@ -7,6 +7,8 @@ local function suggest(suggestions, window)
   local pattern = file:content(wordobject) or ""
   if type(pattern) ~= "string" then pattern = ""
   elseif pattern:match("([a-zA-Z0-9])") == nil then pattern = "" end
+  local dotpattern = pattern:match("^.*%.([^%.]*)$")
+  if type(dotpattern) == "string" then pattern = dotpattern end
   local variants = ""
   for _, suggestion in pairs(suggestions) do
     variants = variants..(#variants>0 and "\n" or "")..
@@ -21,6 +23,8 @@ local function suggest(suggestions, window)
   if state == 0 then
     local stripped = result:match("^.*%|[^|]+%|[^(]*m%s([^:]+):.*")
     if stripped == nil then stripped = result:match("^%s*([^%s]+)%s*$") end
+    if stripped:match("[%$%%%=%<%>%[%]%!%^]") then
+      stripped = '`'..stripped..'`' end
     local head = stripped:sub(1, #pattern)
     if head ~= pattern then
       silent_print(head.." ~= "..pattern)
