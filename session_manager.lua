@@ -1,10 +1,11 @@
 local Session = require('nis.sessions')
+require('nis.utils')
 require('nis.commands')
 local sessions = {} -- a table "filepath" - session
 
 local function debugme(tab)
   for k, v in pairs(tab) do
-    vis:message(k..": "..tostring(v))
+    silent_print(k..": "..tostring(v))
   end
 end
 local function current_session()
@@ -52,7 +53,7 @@ function on_open(file)
       sessions[file.path] = Session.new(file.path)
       sessions[file.path].refcounter = 1
     end
-    debugme(sessions[file.path])
+    --debugme(sessions[file.path])
   end
 end
 

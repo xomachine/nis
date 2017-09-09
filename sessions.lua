@@ -1,4 +1,5 @@
 require("nis.parser")
+require("nis.utils")
 
 local Session = {
   file = nil,
@@ -10,7 +11,7 @@ local Session = {
 function Session:close()
   -- Closes current nimsuggest session and removes all
   -- related temporary files
-  vis:message("Closing session for "..self.file)
+  --silent_print("Closing session for "..self.file)
   self:command("quit")
   self.write_fd:close()
   self.read_fd:close()
@@ -25,7 +26,7 @@ function Session:command(name, add_position)
   -- Result of the command will returned asyncroniusly
   -- via "NISGOTANSWER" event.
   if io.type(self.write_fd) ~= "file" then
-    vis:message("Nimsuggest crashed somehow! Restarting...")
+    silent_print("Nimsuggest crashed somehow! Restarting...")
     local file = self.file
     self:close()
     self = Session.new(file)
@@ -36,7 +37,7 @@ function Session:command(name, add_position)
     if vis.win.file.modified then
       --save file as temporary
       dirty = os.tmpname()
-      --vis:message("Made dirtyfile: "..dirty)
+      --silent_print("Made dirtyfile: "..dirty)
       local dd = assert(io.open(dirty, "w"))
       for line in vis.win.file:lines_iterator() do
         dd:write(line.."\n")
@@ -52,7 +53,7 @@ function Session:command(name, add_position)
   local request = name..filepos.."\n"
   self.write_fd:write(request)
   self.write_fd:flush() -- needed to push request forward to nimsuggest
-  --vis:message("Sent to nimsuggest: "..request)
+  --silent_print("Sent to nimsuggest: "..request)
   os.execute("sleep 0.2") -- give nimsuggest time to handle request
   if dirty then os.remove(dirty) end
   self:cycle() -- read answers if any
@@ -99,14 +100,14 @@ function Session:cycle()
     rawsuggestion = self.read_fd:read("*l")
     if rawsuggestion ~= nil then
       if rawsuggestion == "Crash!" then
-        vis:message("Nimsuggest crashed!")
+        silent_print("Nimsuggest crashed!")
         local file = self.file
         local refcounter = self.refcounter
         self:close()
         self = Session.new(file)
         self.refcounter = refcounter
       end
-      --vis:message("Got answer: "..rawsuggestion)
+      --silent_print("Got answer: "..rawsuggestion)
       tries = tries + 1
       local suggestion = parse_answer(rawsuggestion)
       if suggestion ~= nil then
