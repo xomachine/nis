@@ -1,3 +1,4 @@
+require('nis.utils')
 local graphic = require('nis.graphic')
 local function suggest(suggestions, window)
   local file = window.file
