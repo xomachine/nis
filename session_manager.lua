@@ -17,7 +17,7 @@ local function on_brace(session)
   vis:insert("()")
   vis.win.selection.pos = vis.win.selection.pos - 1
   session:context()
-  return false
+  return true
 end
 
 function get_help()

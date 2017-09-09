@@ -47,7 +47,7 @@ function Session:command(name, add_position)
     local path = vis.win.file.path
     local sel = vis.win.selection
     filepos = " "..path..';'..(dirty or path)..':'..
-              tostring(sel.line)..':'..tostring(sel.col)
+              tostring(sel.line)..':'..tostring(sel.col-1)
   end
   local request = name..filepos.."\n"
   self.write_fd:write(request)
