@@ -3,11 +3,6 @@ require('nis.utils')
 require('nis.commands')
 local sessions = {} -- a table "filepath" - session
 
-local function debugme(tab)
-  for k, v in pairs(tab) do
-    silent_print(k..": "..tostring(v))
-  end
-end
 local function current_session()
   if vis.win and vis.win.file then
     return sessions[vis.win.file.path]

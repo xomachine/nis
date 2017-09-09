@@ -4,3 +4,9 @@ function silent_print(text)
   vis:message(text)
   if current_window ~= nil then  vis.win = current_window end
 end
+
+function debugme(tab)
+  for k, v in pairs(tab) do
+    silent_print(k..": "..tostring(v))
+  end
+end
