@@ -2,8 +2,9 @@ require('nis.utils')
 local graphic = require('nis.graphic')
 local function suggest(suggestions, window)
   local file = window.file
-  local pattern =
-    file:content(file:text_object_word(window.selection.pos-1)) or ""
+  local pos = window.selection.pos
+  local wordobject = file:text_object_word(pos-1 < 1 and 1 or pos-1)
+  local pattern = file:content(wordobject) or ""
   if type(pattern) ~= "string" then pattern = ""
   elseif pattern:match("([a-zA-Z0-9])") == nil then pattern = "" end
   local variants = ""
@@ -19,19 +20,21 @@ local function suggest(suggestions, window)
                                     "' | vis-menu -l 10 '"..pattern.."'")
   if state == 0 then
     local stripped = result:match("^.*%|[^|]+%|[^(]*m%s([^:]+):.*")
-    if stripped == nil then stripped = result:match("%s*([^%s])%s*") end
+    if stripped == nil then stripped = result:match("^%s*([^%s]+)%s*$") end
     local head = stripped:sub(1, #pattern)
     if head ~= pattern then
-      --vis:message(head.." ~= "..pattern)
       silent_print(head.." ~= "..pattern)
-      vis.win.selection.pos = vis.win.selection.pos - #pattern
+      vis.win.selection.pos = wordobject.start
       vis:replace(head)
       local todel = #pattern - #head
-      local pos = vis.win.selection.pos
-      vis.win.file:delete({start = pos, finish = pos + todel})
+      if todel > 0 then
+        local after = vis.win.selection.pos
+        vis.win.file:delete({start = pos, finish = after + todel})
+      end
     end
     local residue = stripped:sub(#pattern+1)
     if type(residue) == "string" and #residue > 0 then vis:insert(residue) end
+    vis.events.emit(vis.events.WIN_HIGHLIGHT, window)
   end
 end
 
