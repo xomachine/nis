@@ -11,3 +11,6 @@ events.subscribe(events.INPUT, dispatch_input)
 
 vis:command_register("suggest", suggest_key)
 vis:command_register("nimhelp", get_help)
+
+vis:map(vis.modes.INSERT, "<C- >", suggest_key,
+        "Suggest the Nim symbol using nimsuggest.")
