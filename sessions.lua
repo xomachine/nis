@@ -76,7 +76,7 @@ function Session.new(filepath)
   -- Creates new nimsuggest session for given file.
   -- This constructor either launches nimsuggest and
   -- prepares all necessary async IO handlers.
-  local newtable = Session
+  local newtable = setmetatable({}, {__index = Session})
   newtable.file = filepath
   newtable.outfifo = mktmpfifo()
   -- setsid is necessary to prevent SIGINT forwarding from vis when Ctrl-C
