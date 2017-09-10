@@ -45,7 +45,7 @@ end
 local function helper(suggestions, window)
   local suggestion = suggestions[1]
   --vis:info(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
-  silent_print(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
+  popup_print(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
 end
 
 local function arghelper(suggestions, window)
