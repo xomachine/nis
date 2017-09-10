@@ -1,11 +1,13 @@
 local Session = require('nis.sessions')
 require('nis.utils')
 require('nis.commands')
+require('nis.project_lookup')
+require('nis.project')
 local sessions = {} -- a table "filepath" - session
 
 local function current_session()
-  if vis.win and vis.win.file then
-    return sessions[vis.win.file.path]
+  if vis.win and vis.win.file and vis.win.file.project then
+    return sessions[vis.win.file.project]
   end
 end
 
@@ -52,28 +54,30 @@ function dispatch_input(key)
 end
 
 function on_open(file)
-  if file == nil or file.path == nil then return end
+  if file == nil or file.path == nil or #file.path < 5 then return end
   if file.path:sub(-3) == "nim" then
-    if sessions[file.path] then
-      local cur = sessions[file.path].refcounter
-      sessions[file.path].refcounter = cur + 1
+    file.project = find_projectfile(file.path)
+    vis:info("'"..file.project.."' used as a projectfile.")
+    if sessions[file.project] then
+      local cur = sessions[file.project].refcounter
+      sessions[file.project].refcounter = cur + 1
     else
-      sessions[file.path] = Session.new(file.path)
-      sessions[file.path].refcounter = 1
+      sessions[file.project] = Session.new(file.project)
+      sessions[file.project].refcounter = 1
     end
-    --debugme(sessions[file.path])
+    --debugme(sessions[file.project])
   end
 end
 
 function on_close(file)
-  if not sessions[file.path] then return end
-  local cur = sessions[file.path].refcounter
+  if not file.project or not sessions[file.project] then return end
+  local cur = sessions[file.project].refcounter
   if cur - 1 == 0 then
-    sessions[file.path]:close()
-    sessions[file.path] = nil
+    sessions[file.project]:close()
+    sessions[file.project] = nil
     collectgarbage()
   else
-    sessions[file.path].refcounter = cur - 1
+    sessions[file.project].refcounter = cur - 1
   end
 end
 
