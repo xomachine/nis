@@ -1,17 +1,25 @@
 require('nis.session_manager')
 require('nis.dispatcher')
+require('nis.project')
 local events = vis.events
 
-events.subscribe("NISGOTANSWER", dispatch)
-events.subscribe(events.FILE_OPEN, on_open)
-events.subscribe(events.QUIT, stop_all)
-events.subscribe(events.WIN_HIGHLIGHT, cycle_all)
-events.subscribe(events.FILE_CLOSE, on_close)
-events.subscribe(events.INPUT, dispatch_input)
+local function check_nimsuggest()
+  local success, ecode, sig = os.execute('nimsuggest -v &> /dev/null')
+  return success
+end
 
-vis:command_register("suggest", suggest_key)
-vis:command_register("nimtodef", goto_def)
-vis:command_register("nimhelp", get_help)
+if check_nimsuggest() then
+  events.subscribe("NISGOTANSWER", dispatch)
+  events.subscribe(events.FILE_OPEN, on_open)
+  events.subscribe(events.QUIT, stop_all)
+  events.subscribe(events.WIN_HIGHLIGHT, cycle_all)
+  events.subscribe(events.FILE_CLOSE, on_close)
+  events.subscribe(events.INPUT, dispatch_input)
 
-vis:map(vis.modes.INSERT, "<C- >", suggest_key,
-        "Suggest the Nim symbol using nimsuggest.")
+  vis:command_register("suggest", suggest_key)
+  vis:command_register("nimtodef", goto_def)
+  vis:command_register("nimhelp", get_help)
+
+  vis:map(vis.modes.INSERT, "<C- >", suggest_key,
+          "Suggest the Nim symbol using nimsuggest.")
+end
