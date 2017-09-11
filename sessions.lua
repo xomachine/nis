@@ -77,12 +77,13 @@ function Session.new(filepath)
   -- This constructor either launches nimsuggest and
   -- prepares all necessary async IO handlers.
   local newtable = setmetatable({}, {__index = Session})
+  newtable.request = false
   newtable.file = filepath
   newtable.outfifo = mktmpfifo()
   -- setsid is necessary to prevent SIGINT forwarding from vis when Ctrl-C
   -- pressed
   newtable.write_fd = assert(io.popen(
-    'setsid -w bash -p -c \'(nimsuggest --stdin --v2 '..newtable.file..
+    'setsid -w bash -p -c \'(nimsuggest --tester '..newtable.file..
     ' 2>&1 || echo "Crash!") | while read n; do echo "$n" >'..
     newtable.outfifo..' ; done\'', 'w'))
   newtable.read_fd = assert(io.open(newtable.outfifo, "r"))
@@ -95,35 +96,41 @@ function Session:cycle()
   -- event with filepath
   local result = {}
   local rawsuggestion
-  local tries = 0
+  local wait_counter = 100
+  local request = self.request
+  -- request should be marked as handled before emiting
+  -- the NISGOTANSWER event to avoid deadlock when cycle will be called
+  -- again during the event handling
+  self.request = false
   repeat
     rawsuggestion = self.read_fd:read("*l")
     if rawsuggestion ~= nil then
       if rawsuggestion == "Crash!" then
-        silent_print("Nimsuggest crashed!")
+        silent_print("Nimsuggest crashed while handling request "..request..
+                     " for file "..self.file..", and will be restarted!")
         local file = self.file
         local refcounter = self.refcounter
         self:close()
         self = Session.new(file)
         self.refcounter = refcounter
+        break
       end
       --silent_print("Got answer: "..rawsuggestion)
-      tries = tries + 1
       local suggestion = parse_answer(rawsuggestion)
       if suggestion ~= nil then
         table.insert(result, suggestion)
       end
-    else
-      if tries > 10 then
-        os.execute("sleep 0.1")
-        tries = 10
-      else
-        tries = tries - 1
-      end
+    elseif request then
+      wait_counter = wait_counter - 1
+      os.execute("sleep 0.05")
+    else break
     end
-  until rawsuggestion == nil and tries <= 0
+  until wait_counter == 0 or rawsuggestion == "!EOF!"
+  if wait_counter == 0 then
+    silent_print("Timeout:"..tostring(request).." at "..self.file)
+  end
   if #result > 0 then
-    vis.events.emit("NISGOTANSWER", self.file, self.request, result)
+    vis.events.emit("NISGOTANSWER", self.file, request, result)
   end
 end
 
