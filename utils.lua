@@ -37,12 +37,14 @@ local function stylize(data)
   local lexer = vis.lexers.load("nim", nil, true)
   if lexer == nil then starth = -1 lexer = {} end
   local styles = lexer._TOKENSTYLES
+  local colorcodepattern = "\\e%[(%d+);%d+m([^\\]+)\\e%[0m"
+  local syntaxpattern = "%.%.%scode%-block::%s[Nn][iI][mM]\n(.-\n\n)"
   register_colors(styles)
   local paints = {}
   start, finish, style, capture =
-    result:find("\\e%[(%d+);%d+m([^\\]+)\\e%[0m", start)
+    result:find(colorcodepattern, start)
   starth, finishh, captureh =
-    result:find("%.%.%scode%-block::%sNim\n(.-\n\n)", starth)
+    result:find(syntaxpattern, starth)
   repeat
     if start == nil and starth == nil then break
     elseif type(start) ~= "number" or (type(starth) == "number" and starth < start) then
@@ -68,7 +70,7 @@ local function stylize(data)
         finish = finish - lendiff
       end
       starth, finishh, captureh =
-        result:find("%.%.%scode%-block::%sNim\n(.-\n\n)", starth)
+        result:find(syntaxpattern, starth)
     elseif starth == nil or start < starth then
       --do for start
       local lendiff = #result
@@ -81,7 +83,7 @@ local function stylize(data)
         finishh = finishh - lendiff
       end
       start, finish, style, capture =
-        result:find("\\e%[(%d+);%d+m([^\\]+)\\e%[0m", start)
+        result:find(colorcodepattern, start)
     else
       error("Should never happened! "..tostring(start)..":"..tostring(starth))
     end
