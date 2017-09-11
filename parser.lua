@@ -23,6 +23,8 @@ function parse_answer(answer)
     suggestion.comment = suggestion.comment:gsub("\\", "")
     suggestion.comment = suggestion.comment:gsub("``([^`]+)``",
       colors.Cyan.."%1"..colors.NoColor)
+    suggestion.comment = suggestion.comment:gsub("`([^`]+)`",
+      colors.Brown.."%1"..colors.NoColor)
   else
     return
   end

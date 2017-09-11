@@ -43,9 +43,14 @@ local function suggest(suggestions, window)
 end
 
 local function helper(suggestions, window)
-  local suggestion = suggestions[1]
+  local toshow = ""
+  local highlighter = ".. code-block:: Nim\n"
+  for _, suggestion in pairs(suggestions) do
+    toshow = toshow..highlighter..suggestion.fullname..": "..suggestion.type..
+             "\n\n"..tostring(suggestion.comment)
+  end
   --vis:info(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
-  popup_print(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
+  popup_print(toshow)
 end
 
 local function arghelper(suggestions, window)
