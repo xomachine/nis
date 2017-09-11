@@ -1,7 +1,7 @@
 # nis
 The Vis plugin that extends Nim language support.
 
-<img width=50% src="https://pp.userapi.com/c837731/v837731894/60bcf/wUvQyP7bfP4.jpg" /><img width=50% src="https://pp.userapi.com/c837731/v837731894/60bd7/_qsEj38B5Mc.jpg" />
+<img width=50% src="https://pp.userapi.com/c837731/v837731894/60bd7/_qsEj38B5Mc.jpg" /><img width=50% src="https://pp.userapi.com/c840536/v840536607/7109/nDrnN95QV8g.jpg" /><img width=100% src="https://pp.userapi.com/c837731/v837731894/60bcf/wUvQyP7bfP4.jpg" />
 
 ## Features
 * Autocompletion on Ctrl+Space (or **:suggest** command, or after dot symbol)
