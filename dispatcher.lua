@@ -13,8 +13,8 @@ local function suggest(suggestions, window)
   for _, suggestion in pairs(suggestions) do
     variants = variants..(#variants>0 and "\n" or "")..
                (graphic.associations[suggestion.skind] or "").."|"..
-               (graphic.glyphs[suggestion.skind] or "U").."|"..
-               graphic.colors.LightGray.." "..suggestion.name..": "..
+               (graphic.glyphs[suggestion.skind] or " U ").."|"..
+               graphic.colors.White:encode().." "..suggestion.name..": "..
                suggestion.type
   end
   local empty = {start = 0, finish = 0}
@@ -44,12 +44,10 @@ end
 
 local function helper(suggestions, window)
   local toshow = ""
-  local highlighter = ".. code-block:: Nim\n"
   for _, suggestion in pairs(suggestions) do
-    toshow = toshow..highlighter..suggestion.fullname..": "..suggestion.type..
-             "\n\n"..tostring(suggestion.comment)
+    toshow = toshow.."\\e[syntax]"..suggestion.fullname..": "..suggestion.type..
+             "\\e[reset]\n\n"..tostring(suggestion.comment)
   end
-  --vis:info(suggestion.fullname.."\n\n"..tostring(suggestion.comment))
   popup_print(toshow)
 end
 

@@ -1,6 +1,6 @@
 require('nis.session_manager')
 require('nis.dispatcher')
-require('nis.project')
+
 local events = vis.events
 
 local function check_nimsuggest()

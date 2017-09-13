@@ -1,4 +1,3 @@
-local colors = require('nis.graphic').colors
 function parse_answer(answer)
   -- Parses nimsuggest answer and returns it as a structure.
   if answer == nil then return end
@@ -22,9 +21,12 @@ function parse_answer(answer)
     suggestion.comment = suggestion.comment:gsub("x0A", "\n")
     suggestion.comment = suggestion.comment:gsub("\\", "")
     suggestion.comment = suggestion.comment:gsub("``([^`]+)``",
-      colors.Cyan.."%1"..colors.NoColor)
+      "\\e[syntax]%1\\e[reset]")
     suggestion.comment = suggestion.comment:gsub("`([^`]+)`",
-      colors.Brown.."%1"..colors.NoColor)
+      "\\e[fore:green]%1\\e[reset]")
+    suggestion.comment = suggestion.comment:gsub(
+      "\n..%scode-block::%s[Nn][iI][mM]\n(.-)\n\n",
+      "\n\n\\e[syntax]%1\\e[reset]\n\n")
   else
     return
   end
