@@ -25,7 +25,7 @@ function parse_answer(answer)
     suggestion.comment = suggestion.comment:gsub("`([^`]+)`",
       "\\e[fore:green]%1\\e[reset]")
     suggestion.comment = suggestion.comment:gsub(
-      "\n..%scode-block::%s[Nn][iI][mM]\n(.-)\n\n",
+      "\n..%scode%-?b?l?o?c?k?::%s[Nn][iI][mM]\n(.-)\n\n",
       "\n\n\\e[syntax]%1\\e[reset]\n\n")
   else
     return
