@@ -1,11 +1,12 @@
 require("nis.parser")
 require("nis.utils")
+require("nis.fifo")
 
 local Session = {
   file = nil,
   write_fd = nil,
-  read_fd = nil,
-  outfifo = nil,
+  outfifo = nil, -- it is not a fifo actually, just a file
+  errfifo = nil,
 }
 
 function Session:close()
@@ -14,8 +15,8 @@ function Session:close()
   --silent_print("Closing session for "..self.file)
   self:command("quit")
   self.write_fd:close()
-  self.read_fd:close()
-  os.remove(self.outfifo)
+  self.outfifo:close()
+  self.errfifo:close()
 end
 
 function Session:command(name, add_position)
@@ -27,9 +28,7 @@ function Session:command(name, add_position)
   -- via "NISGOTANSWER" event.
   if io.type(self.write_fd) ~= "file" then
     silent_print("Nimsuggest crashed somehow! Restarting...")
-    local file = self.file
-    self:close()
-    self = Session.new(file)
+    self = Session.restart(self)
   end
   local filepos = ""
   local dirty = false
@@ -59,17 +58,14 @@ function Session:command(name, add_position)
   self:cycle() -- read answers if any
 end
 
-local function mktmpfifo()
-  -- Creates new temporary fifo queue and returns its path
-  -- Queue should be removed explicitly after use via os.remove
-  local name = os.tmpname()
-  os.remove(name)
-  local success, exitcode, signal = os.execute("mkfifo "..name)
-  if success then
-    return name
-  else
-    error("Failed to create fifo pipe!")
-  end
+function Session.restart(prev)
+  -- Restarting died session with preserving refcounter and filename
+  local file = prev.file
+  local refcounter = prev.refcounter
+  prev:close()
+  local result = Session.new(file)
+  result.refcounter = refcounter
+  return result
 end
 
 function Session.new(filepath)
@@ -79,14 +75,13 @@ function Session.new(filepath)
   local newtable = setmetatable({}, {__index = Session})
   newtable.request = false
   newtable.file = filepath
-  newtable.outfifo = mktmpfifo()
+  newtable.outfifo = ReadFifo.new(os.tmpname())
+  newtable.errfifo = ReadFifo.new(os.tmpname())
   -- setsid is necessary to prevent SIGINT forwarding from vis when Ctrl-C
   -- pressed
   newtable.write_fd = assert(io.popen(
-    'setsid -w bash -p -c \'(nimsuggest --tester '..newtable.file..
-    ' 2>&1 || echo "Crash!") | while read n; do echo "$n" >'..
-    newtable.outfifo..' ; done\'', 'w'))
-  newtable.read_fd = assert(io.open(newtable.outfifo, "r"))
+    'nimsuggest --tester '..newtable.file..' 2>'..newtable.errfifo.path..
+    ' >'.. newtable.outfifo.path, 'w'))
   return newtable
 end
 
@@ -95,40 +90,53 @@ function Session:cycle()
   -- If so, fires NISGOTANSWERFOR:<path to related file>
   -- event with filepath
   local result = {}
-  local rawsuggestion
-  local wait_counter = 100
+  local wait_counter = 25
   local request = self.request
   -- request should be marked as handled before emiting
   -- the NISGOTANSWER event to avoid deadlock when cycle will be called
   -- again during the event handling
   self.request = false
+  --local logger = io.open("/tmp/logger.log", "a")
   repeat
-    rawsuggestion = self.read_fd:read("*l")
-    if rawsuggestion ~= nil then
-      if rawsuggestion == "Crash!" then
+    local rawsuggestion = self.outfifo:peek()
+    --logger:write("Got answer: "..rawsuggestion.."\n")
+    if rawsuggestion ~= nil and rawsuggestion:sub(-10):find("!EOF!") then
+      self.outfifo:truncate()
+      for line in rawsuggestion:gmatch("[a-z][^\n]+") do
+        --logger:write("Found line: " .. line .. "\n")
+        local suggestion = parse_answer(line)
+        if suggestion ~= nil then
+          --logger:write("Suggestion added\n")
+          table.insert(result, suggestion)
+        end
+      end
+      break
+    elseif request then
+      if io.type(self.write_fd) ~= "file" then
+        local possibleerror = self.errfifo:read()
         silent_print("Nimsuggest crashed while handling request "..request..
                      " for file "..self.file..", and will be restarted!")
-        local file = self.file
-        local refcounter = self.refcounter
-        self:close()
-        self = Session.new(file)
-        self.refcounter = refcounter
+        if #possibleerror > 0 then
+          silent_print("Last error messages:")
+          silent_print(possibleerror)
+        end
+        self = Session.restart(self)
         break
       end
-      --silent_print("Got answer: "..rawsuggestion)
-      local suggestion = parse_answer(rawsuggestion)
-      if suggestion ~= nil then
-        table.insert(result, suggestion)
-      end
-    elseif request then
       wait_counter = wait_counter - 1
       os.execute("sleep 0.05")
     else break
     end
   until wait_counter == 0 or rawsuggestion == "!EOF!"
+  local possibleerror = self.errfifo:read()
   if wait_counter == 0 then
     silent_print("Timeout:"..tostring(request).." at "..self.file)
+    if #possibleerror > 0 then
+      silent_print(possibleerror)
+    end
   end
+  --logger:flush()
+  --logger:close()
   if #result > 0 then
     vis.events.emit("NISGOTANSWER", self.file, request, result)
   end
