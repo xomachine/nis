@@ -2,10 +2,7 @@ local Session = require("nis.sessions")
 
 function Session:check()
   self.request = "check"
-  self:command("chk")
-  -- to disable debug mode, which enabled automaticaly
-  --after chk command
-  self:command("debug")
+  self:command("chk", true)
 end
 
 function Session:suggest()

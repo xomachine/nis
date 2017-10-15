@@ -62,7 +62,12 @@ local graphic = {
     skTemplate = "T[]",
     skType = " T ",
     skVar = " V ",
-  }
+  },
+}
+graphic.error_style = {
+  Hint = graphic.colors.BgGreen + graphic.colors.Undercored,
+  Warning = graphic.colors.BgBrown + graphic.colors.Undercored + graphic.colors.Red,
+  Error = graphic.colors.BgOrange + graphic.colors.Undercored + graphic.colors.Red,
 }
 graphic.associations = {
   -- Other stuff

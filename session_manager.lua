@@ -24,6 +24,12 @@ local function suggest_dot(session)
   return true
 end
 
+function check_it()
+  local session = current_session()
+  if session == nil then return end
+  session:check()
+end
+
 function goto_def()
   local session = current_session()
   if session == nil then return end
@@ -65,6 +71,7 @@ function on_open(file)
       sessions[file.project] = Session.new(file.project)
       sessions[file.project].refcounter = 1
     end
+    file.request_highlight = true
     --debugme(sessions[file.project])
   end
 end
@@ -81,9 +88,16 @@ function on_close(file)
   end
 end
 
-function cycle_all()
+function cycle_all(window)
   for _, session in pairs(sessions) do
     session:cycle()
+  end
+  if window.file.request_highlight then
+    window.file.request_highlight = nil
+    check_it()
+  end
+  if window.error_highlighter then
+    window.error_highlighter(window)
   end
 end
 

@@ -54,8 +54,8 @@ function Session:command(name, add_position)
   self.write_fd:flush() -- needed to push request forward to nimsuggest
   --silent_print("Sent to nimsuggest: "..request)
   os.execute("sleep 0.2") -- give nimsuggest time to handle request
-  if dirty then os.remove(dirty) end
   self:cycle() -- read answers if any
+  if dirty then os.remove(dirty) end
 end
 
 function Session.restart(prev)

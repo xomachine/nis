@@ -84,32 +84,79 @@ function silent_print(text)
   if current_window ~= nil then  vis.win = current_window end
 end
 
+function get_error_file()
+  if (not vis.error_file) or not vis.message_window then
+    vis:message("tofocusmsgwindow")
+    vis.error_file = vis.win.file
+    vis.message_window = vis.win
+    vis.win.selection.pos = 0
+    vis.error_file:delete(0, vis.error_file.size)
+  end
+  return vis.error_file
+end
+--function open_message_window()
+--  if not vis.message_window then
+--    local file = get_error_file()
+--    vis:command("new")
+--    vis.win.file = file
+--    vis.message_window = vis.win
+--  end
+--  return vis.message_window
+--end
+--function open_message_window_in_bg()
+--  local curwin = vis.win
+--  local msgwin = open_message_window()
+--  if curwin then vis.win = curwin end
+--  return msgwin
+--end
+function close_message_window()
+  if vis.message_window then
+    if vis.ignore then return end
+    vis.ignore = true
+    vis.win = vis.message_window
+    vis:command("q!")
+    vis.message_window = nil
+    vis.ignore = false
+  end
+end
 function popup_print(text)
-  local current_window = vis.win
-  vis:message("tofocustmpwindow")
-  local file = vis.win.file
-  file:delete({start = 0, finish = file.size-1})
+  if vis.ignore then return end
+  vis.ignore = true
+  local lastwin = vis.win
+  local file = get_error_file()
+  local curwin = vis.message_window
+  curwin.selection.pos = 0
+  file:delete(0, file.size)
   local cleantext, paints = stylize(text)
-  vis:message(cleantext)
-  local curwin = vis.win
-  local paint = function(win)
+  --vis:message(cleantext)
+  file:insert(0, "\n"..cleantext)
+  if curwin.remover then curwin.remover() end
+  local painter = function(win)
     for _, task in pairs(paints) do
       curwin:style(task.style, task.start, task.len)
     end
   end
-  local remover = function (win)
-    if win == curwin then
-      vis.events.unsubscribe(vis.events.WIN_HIGHLIGHT, paint)
-      vis.events.unsubscribe(vis.events.WIN_CLOSE, remover)
-    end
+  local remover
+  remover = function(win)
+    vis.events.unsubscribe(vis.events.WIN_HIGHLIGHT, painter)
+    vis.events.unsubscribe(vis.events.WIN_CLOSE, remover)
+    curwin.painter = nil
+    curwin.remover = nil
   end
-  vis.events.subscribe(vis.events.WIN_HIGHLIGHT, paint)
+  curwin.remover = remover
+  vis.events.subscribe(vis.events.WIN_HIGHLIGHT, painter)
   vis.events.subscribe(vis.events.WIN_CLOSE, remover)
-  if current_window ~= nil then  vis.win = current_window end
+  if lastwin then vis.win = lastwin end
+  vis.ignore = false
 end
 
-function debugme(tab)
+function debugme(tab, lvl)
+  if lvl == nil then lvl = 0 end
+  local indent = string.rep("  ", lvl)
   for k, v in pairs(tab) do
-    silent_print(k..": "..tostring(v))
+    silent_print(indent..k..": "..tostring(v))
+    if type(v) == "table" then
+      debugme(v, lvl + 1)
+    end
   end
 end

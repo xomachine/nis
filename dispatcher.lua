@@ -70,6 +70,55 @@ local function deffinder(suggestions, window)
   vis.win.selection:to(suggestion.line, suggestion.column)
 end
 
+local function highlight_errors(suggestions, window)
+  local errors = {}
+  local error_style = graphic.error_style
+  local lexer, existent = register_colors()
+  window.file.converter = {}
+  local i = 1
+  local pos = 0
+  for line in window.file:lines_iterator() do
+    local length = #line
+    window.file.converter[i] = { start = pos, length = length }
+    i = i + 1
+    pos = pos + length + 1
+  end
+  for _, suggestion in pairs(suggestions) do
+    if suggestion.file == window.file.path then
+      local style = existent[error_style[suggestion.type].description]
+      local pos = window.file.converter[suggestion.line].start +
+        suggestion.column
+      local selection = window.file:text_object_word(pos)
+      table.insert(errors, {style = style, comment = suggestion.comment,
+                            start = selection.start, finish = selection.finish})
+    end
+  end
+  window.error_highlighter = function(win)
+    if win.file.modified then return end
+    local content = win.viewport
+    local selection = win.selection.pos
+    local message
+    for _, err in pairs(errors) do
+      if (err.finish > content.start and err.finish < content.finish) or
+         (err.start > content.start and err.start < content.finish) then
+        win:style(err.style, err.start, err.finish)
+        --silent_print("Got you!"..tostring(err.start))
+        if selection < err.finish and selection > err.start then
+          message = err.comment
+        end
+      end
+    end
+    local multiline = message and (message:find("\n") or #message >= win.width)
+    if multiline then
+      popup_print(message)
+    elseif message then
+      vis:info(message)
+    else
+      close_message_window()
+    end
+  end
+end
+
 local responces = {
   -- a table with functions which should be called on certain suggestion type
   -- encounter
@@ -77,6 +126,7 @@ local responces = {
   help = helper,
   context = arghelper,
   gotodef = deffinder,
+  check = highlight_errors,
 }
 
 function dispatch(filepath, request, suggestions)
