@@ -80,7 +80,7 @@ function Session.new(filepath)
   -- setsid is necessary to prevent SIGINT forwarding from vis when Ctrl-C
   -- pressed
   newtable.write_fd = assert(io.popen(
-    'nimsuggest --tester '..newtable.file..' 2>'..newtable.errfifo.path..
+    'setsid -w nimsuggest --tester '..newtable.file..' 2>'..newtable.errfifo.path..
     ' >'.. newtable.outfifo.path, 'w'))
   return newtable
 end
