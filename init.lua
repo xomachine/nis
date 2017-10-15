@@ -17,7 +17,7 @@ if check_nimsuggest() then
   events.subscribe(events.FILE_CLOSE, on_close)
   events.subscribe(events.INPUT, dispatch_input)
 
-  vis:command_register("suggest", suggest_key)
+  vis:command_register("nimsuggest", suggest_key)
   vis:command_register("nimtodef", goto_def)
   vis:command_register("nimhelp", get_help)
   vis:command_register("nimcheck", check_it)
