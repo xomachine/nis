@@ -1,4 +1,6 @@
 local colors = require('nis.graphic').colors
+require('nis.message_window')
+local notifier = MessageWindow.new()
 function splitpath(path)
   -- Splits path to parent dir and file name
   if type(path) ~= "string" then return end
@@ -84,69 +86,26 @@ function silent_print(text)
   if current_window ~= nil then  vis.win = current_window end
 end
 
-function get_error_file()
-  if (not vis.error_file) or not vis.message_window then
-    vis:message("tofocusmsgwindow")
-    vis.error_file = vis.win.file
-    vis.message_window = vis.win
-    vis.win.selection.pos = 0
-    vis.error_file:delete(0, vis.error_file.size)
-  end
-  return vis.error_file
-end
---function open_message_window()
---  if not vis.message_window then
---    local file = get_error_file()
---    vis:command("new")
---    vis.win.file = file
---    vis.message_window = vis.win
---  end
---  return vis.message_window
---end
---function open_message_window_in_bg()
---  local curwin = vis.win
---  local msgwin = open_message_window()
---  if curwin then vis.win = curwin end
---  return msgwin
---end
 function close_message_window()
-  if vis.message_window then
-    if vis.ignore then return end
-    vis.ignore = true
-    vis.win = vis.message_window
-    vis:command("q!")
-    vis.message_window = nil
-    vis.ignore = false
-  end
+  notifier:hide()
 end
 function popup_print(text)
   if vis.ignore then return end
   vis.ignore = true
   local lastwin = vis.win
-  local file = get_error_file()
-  local curwin = vis.message_window
-  curwin.selection.pos = 0
-  file:delete(0, file.size)
+  notifier:show()
+  -- the order matters! stylize needs to have window that it is stylizing in
+  -- focus
   local cleantext, paints = stylize(text)
-  --vis:message(cleantext)
-  file:insert(0, "\n"..cleantext)
-  if curwin.remover then curwin.remover() end
+  notifier:setText("\n"..cleantext)
+  local curwin = notifier.win
   local painter = function(win)
     for _, task in pairs(paints) do
-      curwin:style(task.style, task.start, task.len)
+      win:style(task.style, task.start, task.len)
     end
   end
-  local remover
-  remover = function(win)
-    vis.events.unsubscribe(vis.events.WIN_HIGHLIGHT, painter)
-    vis.events.unsubscribe(vis.events.WIN_CLOSE, remover)
-    curwin.painter = nil
-    curwin.remover = nil
-  end
-  curwin.remover = remover
-  vis.events.subscribe(vis.events.WIN_HIGHLIGHT, painter)
-  vis.events.subscribe(vis.events.WIN_CLOSE, remover)
-  if lastwin then vis.win = lastwin end
+  curwin.error_highlighter = painter
+  if lastwin and vis.win ~= lastwin then vis.win = lastwin end
   vis.ignore = false
 end
 
