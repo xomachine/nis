@@ -1,4 +1,5 @@
 require('nis.utils')
+require('nis.message_window')
 local graphic = require('nis.graphic')
 local function suggest(suggestions, window)
   local file = window.file
@@ -74,6 +75,7 @@ local function highlight_errors(suggestions, window)
   local errors = {}
   local error_style = graphic.error_style
   local lexer, existent = register_colors()
+  local errormessage = MessageWindow.new()
   window.file.converter = {}
   local i = 1
   local pos = 0
@@ -110,11 +112,15 @@ local function highlight_errors(suggestions, window)
     end
     local multiline = message and (message:find("\n") or #message >= win.width)
     if multiline then
-      popup_print(message)
+      vis.ignore = true
+      errormessage:setText(message)
+      errormessage:showOnBg()
+      vis.ignore = false
     elseif message then
+      errormessage:hide()
       vis:info(message)
     else
-      close_message_window()
+      errormessage:hide()
     end
   end
 end

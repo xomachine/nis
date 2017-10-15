@@ -89,6 +89,7 @@ function on_close(file)
 end
 
 function cycle_all(window)
+  if vis.ignore then return end
   for _, session in pairs(sessions) do
     session:cycle()
   end

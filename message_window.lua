@@ -14,6 +14,7 @@ end
 function MessageWindow:destroy()
   self:hide()
   os.remove(self.file)
+  self.file = nil
 end
 
 function MessageWindow:isVisible()
@@ -44,7 +45,7 @@ end
 
 function MessageWindow:showOnBg()
   self:storeWin()
-  self.show()
+  self:show()
   self:restoreWin()
 end
 
@@ -68,7 +69,9 @@ function MessageWindow:hide()
 end
 
 MessageWindow.new = function ()
-  local win = setmetatable({}, {__index=MessageWindow})
+  local win = setmetatable({}, {
+    __index=MessageWindow,
+    __gc=function(o) os.remove(o.file) o.file = nil end})
   win.file = os.tmpname()
   win.text = ""
   win.win = nil

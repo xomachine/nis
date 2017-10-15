@@ -90,7 +90,6 @@ function close_message_window()
   notifier:hide()
 end
 function popup_print(text)
-  if vis.ignore then return end
   vis.ignore = true
   local lastwin = vis.win
   notifier:show()
