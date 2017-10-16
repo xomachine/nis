@@ -89,7 +89,8 @@ function on_close(file)
 end
 
 function cycle_all(window)
-  if vis.ignore then return end
+  if vis.ignore then return end -- The lock to prevent endless windows updates
+  vis.ignore = true
   for _, session in pairs(sessions) do
     session:cycle()
   end
@@ -100,6 +101,7 @@ function cycle_all(window)
   if window.error_highlighter then
     window.error_highlighter(window)
   end
+  vis.ignore = false
 end
 
 function stop_all()
