@@ -1,5 +1,3 @@
-require('nis.session_manager')
-require('nis.dispatcher')
 
 local events = vis.events
 
@@ -9,6 +7,8 @@ local function check_nimsuggest()
 end
 
 if check_nimsuggest() then
+  require('nis.session_manager')
+  require('nis.dispatcher')
   events.subscribe("NISGOTANSWER", dispatch)
   events.subscribe(events.FILE_OPEN, on_open)
   events.subscribe(events.FILE_SAVE_POST, check_it)
