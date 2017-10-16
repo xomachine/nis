@@ -1,6 +1,5 @@
 local colors = require('nis.graphic').colors
 require('nis.message_window')
-local notifier = MessageWindow.new()
 function splitpath(path)
   -- Splits path to parent dir and file name
   if type(path) ~= "string" then return end
@@ -86,10 +85,7 @@ function silent_print(text)
   if current_window ~= nil then  vis.win = current_window end
 end
 
-function close_message_window()
-  notifier:hide()
-end
-function popup_print(text)
+function stylized_print(notifier, text)
   vis.ignore = true
   local lastwin = vis.win
   notifier:show()

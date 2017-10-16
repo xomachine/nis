@@ -45,11 +45,14 @@ end
 
 local function helper(suggestions, window)
   local toshow = ""
+  if not window.notifier then
+    window.notifier = MessageWindow.new()
+  end
   for _, suggestion in pairs(suggestions) do
     toshow = toshow.."\\e[syntax]"..suggestion.fullname..": "..suggestion.type..
              "\\e[reset]\n\n"..tostring(suggestion.comment)
   end
-  popup_print(toshow)
+  stylized_print(window.notifier, toshow)
 end
 
 local function arghelper(suggestions, window)
@@ -75,7 +78,7 @@ local function highlight_errors(suggestions, window)
   local errors = {}
   local error_style = graphic.error_style
   local lexer, existent = register_colors()
-  local errormessage = MessageWindow.new()
+  if not window.errormessage then window.errormessage = MessageWindow.new() end
   window.file.converter = {}
   local i = 1
   local pos = 0
@@ -113,14 +116,14 @@ local function highlight_errors(suggestions, window)
     local multiline = message and (message:find("\n") or #message >= win.width)
     if multiline then
       vis.ignore = true
-      errormessage:setText(message)
-      errormessage:showOnBg()
+      window.errormessage:setText(message)
+      window.errormessage:showOnBg()
       vis.ignore = false
     elseif message then
-      errormessage:hide()
+      window.errormessage:hide()
       vis:info(message)
     else
-      errormessage:hide()
+      window.errormessage:hide()
     end
   end
 end
