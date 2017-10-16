@@ -65,8 +65,8 @@ local graphic = {
   },
 }
 graphic.error_style = {
-  Hint = graphic.colors.BgGreen + graphic.colors.Undercored,
-  Warning = graphic.colors.BgBrown + graphic.colors.Undercored + graphic.colors.Red,
+  Hint = graphic.colors.Green + graphic.colors.Undercored,
+  Warning = graphic.colors.Undercored + graphic.colors.Orange,
   Error = graphic.colors.BgOrange + graphic.colors.Undercored + graphic.colors.Red,
 }
 graphic.associations = {
