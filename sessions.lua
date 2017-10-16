@@ -2,7 +2,7 @@ require("nis.parser")
 require("nis.utils")
 require("nis.fifo")
 
-local Session = {
+Session = {
   file = nil,
   write_fd = nil,
   outfifo = nil, -- it is not a fifo actually, just a file
@@ -142,5 +142,4 @@ function Session:cycle()
   end
 end
 
-return Session
 

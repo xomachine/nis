@@ -1,4 +1,4 @@
-local Session = require("nis.sessions")
+require("nis.sessions")
 
 function Session:check()
   self.request = "check"

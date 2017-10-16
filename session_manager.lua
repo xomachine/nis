@@ -1,4 +1,4 @@
-local Session = require('nis.sessions')
+require('nis.sessions')
 require('nis.utils')
 require('nis.commands')
 require('nis.project_lookup')
