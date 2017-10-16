@@ -28,7 +28,7 @@ function Session:command(name, add_position)
   -- via "NISGOTANSWER" event.
   if io.type(self.write_fd) ~= "file" then
     silent_print("Nimsuggest crashed somehow! Restarting...")
-    self = Session.restart(self)
+    self:restart()
   end
   local filepos = ""
   local dirty = false
@@ -58,14 +58,13 @@ function Session:command(name, add_position)
   if dirty then os.remove(dirty) end
 end
 
-function Session.restart(prev)
+function Session:restart()
   -- Restarting died session with preserving refcounter and filename
-  local file = prev.file
-  local refcounter = prev.refcounter
-  prev:close()
-  local result = Session.new(file)
-  result.refcounter = refcounter
-  return result
+  local file = self.file
+  local refcounter = self.refcounter
+  self:close()
+  self:init(file)
+  self.refcounter = refcounter
 end
 
 function Session.new(filepath)
@@ -73,16 +72,20 @@ function Session.new(filepath)
   -- This constructor either launches nimsuggest and
   -- prepares all necessary async IO handlers.
   local newtable = setmetatable({}, {__index = Session})
-  newtable.request = false
-  newtable.file = filepath
-  newtable.outfifo = ReadFifo.new(os.tmpname())
-  newtable.errfifo = ReadFifo.new(os.tmpname())
+  newtable:init(filepath)
+  return newtable
+end
+
+function Session:init(filepath)
+  self.request = false
+  self.file = filepath
+  self.outfifo = ReadFifo.new(os.tmpname())
+  self.errfifo = ReadFifo.new(os.tmpname())
   -- setsid is necessary to prevent SIGINT forwarding from vis when Ctrl-C
   -- pressed
-  newtable.write_fd = assert(io.popen(
-    'setsid -w nimsuggest --tester '..newtable.file..' 2>'..newtable.errfifo.path..
-    ' >'.. newtable.outfifo.path, 'w'))
-  return newtable
+  self.write_fd = assert(io.popen(
+    'setsid -w nimsuggest --tester '..self.file..' 2>>'..self.errfifo.path..
+    ' >>'.. self.outfifo.path, 'w'))
 end
 
 function Session:cycle()
@@ -90,7 +93,7 @@ function Session:cycle()
   -- If so, fires NISGOTANSWERFOR:<path to related file>
   -- event with filepath
   local result = {}
-  local wait_counter = 25
+  local wait_counter = 20 -- ~1 second
   local request = self.request
   -- request should be marked as handled before emiting
   -- the NISGOTANSWER event to avoid deadlock when cycle will be called
@@ -98,48 +101,42 @@ function Session:cycle()
   self.request = false
   --local logger = io.open("/tmp/logger.log", "a")
   repeat
-    local rawsuggestion = self.outfifo:peek()
-    --logger:write("Got answer: "..rawsuggestion.."\n")
-    if rawsuggestion ~= nil and rawsuggestion:sub(-10):find("!EOF!") then
-      self.outfifo:truncate()
-      for line in rawsuggestion:gmatch("[a-z][^\n]+") do
-        --logger:write("Found line: " .. line .. "\n")
-        local suggestion = parse_answer(line)
-        if suggestion ~= nil then
-          --logger:write("Suggestion added\n")
-          table.insert(result, suggestion)
-        end
+    local rawline = self.outfifo:read("*l")
+    if rawline then
+      --logger:write("Got answer: "..rawline.."\n")
+      local suggestion, errmsg = parse_answer(rawline)
+      if suggestion then
+        --logger:write("Suggestion added\n")
+        table.insert(result, suggestion)
+        -- If nimsuggest still printing we will give it more time
+        if wait_counter < 10 then wait_counter = 10 end
+      --else
+        --logger:write(errmsg.."\n")
       end
-      break
     elseif request then
-      if io.type(self.write_fd) ~= "file" then
-        local possibleerror = self.errfifo:read()
-        silent_print("Nimsuggest crashed while handling request "..request..
-                     " for file "..self.file..", and will be restarted!")
-        if #possibleerror > 0 then
-          silent_print("Last error messages:")
-          silent_print(possibleerror)
-        end
-        self = Session.restart(self)
-        break
-      end
       wait_counter = wait_counter - 1
       os.execute("sleep 0.05")
     else break
     end
-  until wait_counter == 0 or rawsuggestion == "!EOF!"
-  local possibleerror = self.errfifo:read()
+  until wait_counter == 0 or rawline == "!EOF!"
   if wait_counter == 0 then
+    local possibleerror = self.errfifo:read("*a")
+    local allcontent = self.outfifo:read("*a")
     silent_print("Timeout:"..tostring(request).." at "..self.file)
-    if #possibleerror > 0 then
-      silent_print(possibleerror)
-    end
+    silent_print("Last log messages:")
+    silent_print(possibleerror)
+    silent_print("Output buffer content:")
+    silent_print(allcontent)
+    silent_print("Probably nimsuggest crashed... restarting")
+    self:restart()
   end
-  --logger:flush()
-  --logger:close()
+  --self.errfifo:truncate()
+  self.outfifo:truncate()
   if #result > 0 then
     vis.events.emit("NISGOTANSWER", self.file, request, result)
   end
+  --logger:flush()
+  --logger:close()
 end
 
 
