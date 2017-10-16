@@ -4,10 +4,11 @@ The Vis plugin that extends Nim language support.
 <img width=50% src="https://pp.userapi.com/c837731/v837731894/60bd7/_qsEj38B5Mc.jpg" /><img width=50% src="https://pp.userapi.com/c840536/v840536607/7109/nDrnN95QV8g.jpg" /><img width=100% src="https://pp.userapi.com/c837731/v837731894/60bcf/wUvQyP7bfP4.jpg" />
 
 ## Features
-* Autocompletion on Ctrl+Space (or **:suggest** command, or after dot symbol)
+* Autocompletion on Ctrl+Space (or **:nimsuggest** command, or after dot symbol)
 * Calltips at the bottom of the editor when '(' is typed
 * Search for the identifier under cursor definition on **:nimtodef** command
 * The code under cursor documentation viewer on **:nimhelp** command
+* Error highlighting on file save or on **:nimcheck** command
 
 *Other features coming soon... or not so soon.*
 
