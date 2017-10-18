@@ -12,8 +12,7 @@ local function current_session()
 end
 
 local function on_brace(session)
-  vis:insert("()")
-  vis.win.selection.pos = vis.win.selection.pos - 1
+  vis:insert("(")
   session:context()
   return true
 end
@@ -100,6 +99,9 @@ function cycle_all(window)
   end
   if window.error_highlighter then
     window.error_highlighter(window)
+  end
+  if window.calltip then
+    window.calltip(window)
   end
   vis.ignore = false
 end

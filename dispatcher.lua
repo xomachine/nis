@@ -55,12 +55,56 @@ local function helper(suggestions, window)
   stylized_print(window.notifier, toshow)
 end
 
+local function extractArgs(line)
+  local start, finish = matchBrace(line)
+  if not start then return end
+  return line:sub(start, finish-1)
+end
+
 local function arghelper(suggestions, window)
+  local oldselection = window.selection.pos
+  local curline = window.selection.line
+  local backwarding = window.selection.col - 1
+  local calltip = ""
   if #suggestions == 1 then
-    vis:info(suggestions[1].type:match("%((.*)%)"))
+    calltip = extractArgs(suggestions[1].type)
+    if calltip then
+      vis:info(calltip)
+    end
   else
-    for suggestion in pairs(suggestions) do
-      silent_print(suggestion.type)
+    local variants = ""
+    local empty = {start = 0, finish = 0}
+    for i, suggestion in pairs(suggestions) do
+      local arg = extractArgs(suggestion.type)
+      if arg then
+        variants = arg.."\n"..variants
+      end
+    end
+    local state, result, _ = vis:pipe(window.file, empty, "echo -e '"..
+                                      variants.."' | vis-menu -l 10")
+    if state == 0 then
+      if not variants:find(result) then
+        vis:insert(result:match("^[^\n]+"))
+        return
+      else calltip = result
+      end
+    end
+  end
+  vis:insert(")")
+  window.selection.pos = oldselection
+  if calltip then
+    local roi = {start=oldselection-backwarding, finish=oldselection}
+    local func = window.file:content(roi)
+    window.calltip = function(win)
+      local curpos = win.selection.pos
+      if win.selection.line == curline and curpos >= oldselection and
+         win.file:content(roi) == func then
+        local line = win.file.lines[curline]
+        local astart, aend = matchBrace(line, backwarding)
+        if aend and oldselection + aend - backwarding > curpos then
+          vis:info(calltip)
+        end
+      end
     end
   end
 end
