@@ -79,6 +79,27 @@ local function stylize(data)
   return result, paints
 end
 
+function matchBrace(line, pos)
+  -- Matches closing brace taking into account internal braces
+  -- pos should be a position before opening brace
+  local start = pos
+  if not start then
+    start = line:find("(", 1, true)
+    if not start then return
+    else start = start + 1 end
+  end
+  pos = start
+  local unmatched = 1
+  while unmatched > 0 do
+    start = line:find("[()]", start+1)
+    if not start then return end
+    local matched = line:sub(start, start)
+    if matched == "(" then unmatched = unmatched + 1
+    else unmatched = unmatched - 1 end
+  end
+  return pos, start
+end
+
 function silent_print(text)
   local current_window = vis.win
   vis:message(tostring(text))
