@@ -15,10 +15,17 @@ if check_nimsuggest() then
   events.subscribe(events.FILE_SAVE_POST, check_it)
   events.subscribe(events.QUIT, stop_all)
   events.subscribe(events.WIN_HIGHLIGHT, cycle_all)
+  events.subscribe(events.WIN_OPEN, function (w)
+    w.subwindows = {}
+    w.triggers = {}
+  end)
   events.subscribe(events.WIN_CLOSE,
                    function(w) -- Removing all windows attached to this one
-                     return (w.notifier and w.notifier:destroy()) or
-                            (w.errormessage and w.errormessage:destroy())
+                     if w.subwindows then
+                       for name, sw in pairs(w.subwindows) do
+                         sw:destroy()
+                       end
+                     end
                    end)
   events.subscribe(events.FILE_CLOSE, on_close)
   events.subscribe(events.INPUT, dispatch_input)

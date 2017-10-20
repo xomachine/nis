@@ -45,14 +45,14 @@ end
 
 local function helper(suggestions, window)
   local toshow = ""
-  if not window.notifier then
-    window.notifier = MessageWindow.new()
+  if not window.subwindows.notifier then
+    window.subwindows.notifier = MessageWindow.new()
   end
   for _, suggestion in pairs(suggestions) do
     toshow = toshow.."\\e[syntax]"..suggestion.fullname..": "..suggestion.type..
              "\\e[reset]\n\n"..tostring(suggestion.comment)
   end
-  stylized_print(window.notifier, toshow)
+  stylized_print(window.subwindows.notifier, toshow)
 end
 
 local function extractArgs(line)
@@ -95,7 +95,7 @@ local function arghelper(suggestions, window)
   if calltip then
     local roi = {start=oldselection-backwarding, finish=oldselection}
     local func = window.file:content(roi)
-    window.calltip = function(win)
+    window.triggers.calltip = function(win)
       local curpos = win.selection.pos
       if win.selection.line == curline and curpos >= oldselection and
          win.file:content(roi) == func then
@@ -122,7 +122,7 @@ local function highlight_errors(suggestions, window)
   local errors = {}
   local error_style = graphic.error_style
   local lexer, existent = register_colors(window)
-  if not window.errormessage then window.errormessage = MessageWindow.new() end
+  if not window.subwindows.errormessage then window.subwindows.errormessage = MessageWindow.new() end
   window.file.converter = {}
   local i = 1
   local pos = 0
@@ -142,7 +142,7 @@ local function highlight_errors(suggestions, window)
                             start = selection.start, finish = selection.finish})
     end
   end
-  window.error_highlighter = function(win)
+  window.triggers.error_highlighter = function(win)
     if win.file.modified then return end
     local content = win.viewport
     local selection = win.selection.pos
@@ -160,14 +160,14 @@ local function highlight_errors(suggestions, window)
     local multiline = message and (message:find("\n") or #message >= win.width)
     if multiline then
       vis.ignore = true
-      window.errormessage:setText(message)
-      window.errormessage:showOnBg()
+      window.subwindows.errormessage:setText(message)
+      window.subwindows.errormessage:showOnBg()
       vis.ignore = false
     elseif message then
-      window.errormessage:hide()
+      window.subwindows.errormessage:hide()
       vis:info(message)
     else
-      window.errormessage:hide()
+      window.subwindows.errormessage:hide()
     end
   end
 end

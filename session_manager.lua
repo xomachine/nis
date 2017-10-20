@@ -70,7 +70,6 @@ function on_open(file)
       sessions[file.project] = Session.new(file.project)
       sessions[file.project].refcounter = 1
     end
-    file.request_highlight = true
     --debugme(sessions[file.project])
   end
 end
@@ -93,15 +92,10 @@ function cycle_all(window)
   for _, session in pairs(sessions) do
     session:cycle()
   end
-  if window.file.request_highlight then
-    window.file.request_highlight = nil
-    check_it()
-  end
-  if window.error_highlighter then
-    window.error_highlighter(window)
-  end
-  if window.calltip then
-    window.calltip(window)
+  if window.triggers then
+    for tname, trigger in pairs(window.triggers) do
+      trigger(window)
+    end
   end
   vis.ignore = false
 end

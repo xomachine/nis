@@ -106,7 +106,7 @@ function stylized_print(notifier, text, append)
     curwin.paints = paints
   end
   notifier:setText("\n"..cleantext, append)
-  curwin.error_highlighter = function(win)
+  curwin.triggers.error_highlighter = function(win)
     for _, task in pairs(win.paints) do
       win:style(task.style, task.start, task.finish)
     end
