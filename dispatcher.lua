@@ -121,7 +121,7 @@ end
 local function highlight_errors(suggestions, window)
   local errors = {}
   local error_style = graphic.error_style
-  local lexer, existent = register_colors()
+  local lexer, existent = register_colors(window)
   if not window.errormessage then window.errormessage = MessageWindow.new() end
   window.file.converter = {}
   local i = 1
