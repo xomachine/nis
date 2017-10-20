@@ -1,4 +1,18 @@
 require('nis.utils')
+
+function openInProject()
+  -- Suggest to open a file from the project
+  local file = vis.win.file
+  if not file or not file.project then return end
+  local dir = file.project:match("^(.*/)[^/]+$")
+  local empty = {start = 0, finish = 0}
+  local state, result = vis:pipe(file, empty, 'cd '..dir..
+                                 '; find . -name "*.nim*" | vis-menu -l 10')
+  if state == 0 then
+    vis:command("o "..dir..result)
+  end
+end
+
 function parse_nimble(path)
   -- Parses given nimble file and searches for "bin = <smth>" line.
   -- The first existent source path for bin directives found will be returned.

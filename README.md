@@ -9,6 +9,7 @@ A Vis plugin that extends Nim language support.
 * Search for the identifier under cursor definition on **:nimtodef** command
 * The code under cursor documentation viewer on **:nimhelp** command
 * Error highlighting on file save or on **:nimcheck** command
+* Search/open file from the project via **:nimopen** command
 
 *Other features coming soon... or not so soon.*
 
