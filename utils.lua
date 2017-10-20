@@ -44,9 +44,8 @@ function register_colors(window)
 end
 
 local function stylize(window, data)
-  local start, finish, capture, style
+  local start, finish, style, lexer, existent
   local result = data
-  local lexer, existent
   if not window.existent then
     lexer, existent = register_colors(window)
   else
@@ -54,34 +53,45 @@ local function stylize(window, data)
     lexer = vis.lexers.load("nim", nil, true)
   end
   local styles = lexer._TOKENSTYLES
-  local colorizepattern = "\\e%[([^%]]+)%](.-)\\e%[reset%]"
   local paints = {}
+  local tokenstart = 0
+  local currenttoken = "reset"
   repeat
-    start, finish, style, capture =
-      result:find(colorizepattern, start)
-    if start == nil then break end
-    result = result:sub(1, start-1)..capture..result:sub(finish+1)
-    if style == "syntax" then
-      --do syntax highlighting
-      local tokens = lexer:lex(capture, 1)
-      local tstart = start
-      for i = 1, #tokens, 2 do
-        local tend = start + tokens[i+1] - 1
-        if tend >= tstart then
-          local name = tokens[i]
-          local tstyle = styles[name]
-          if tstyle ~= nil then
-            table.insert(paints, {start = tstart, len = tend, style = tstyle})
-          end
-        end
-        tstart = tend
-      end
+    start, finish, style = result:find("\\e%[([^%]]+)%]", start)
+    if start == nil then
+      start = #result
+      style = "reset"
     else
-      --do colorizing according the style
-      table.insert(paints, {start = start, len = start+#capture-1,
-                            style = existent[style]})
+      result = result:sub(1, start-1)..result:sub(finish+1)
     end
-  until start == nil
+    if currenttoken ~= "reset" then
+      if currenttoken == "syntax" then
+        --do syntax highlighting
+        local tokens = lexer:lex(result:sub(tokenstart,start), 1)
+        local tstart = tokenstart
+        for i = 1, #tokens, 2 do
+          local tend = tokenstart + tokens[i+1] - 1
+          if tend >= tstart then
+            local name = tokens[i]
+            local tstyle = styles[name]
+            if tstyle ~= nil then
+              table.insert(paints, {start = tstart, finish = tend,
+                           style = tstyle})
+            end
+          end
+          tstart = tend
+        end
+      elseif tokenstart == start and style ~= "syntax" then
+        currenttoken = currenttoken..","..style
+      else
+        --do colorizing according the style
+        table.insert(paints, {start = tokenstart, finish = start,
+                              style = existent[currenttoken]})
+      end
+    end
+    tokenstart = start
+    currenttoken = style
+  until start == #result
   window.existent = existent
   return result, paints
 end
@@ -124,7 +134,7 @@ function stylized_print(notifier, text)
   local curwin = notifier.win
   local painter = function(win)
     for _, task in pairs(paints) do
-      win:style(task.style, task.start, task.len)
+      win:style(task.style, task.start, task.finish)
     end
   end
   curwin.error_highlighter = painter
