@@ -51,12 +51,13 @@ function find_projectfile(basefile)
       end
       local nimble = nimbles[1]
       -- check if executable is explicitly set inside the nimble file
-      local candidate = parse_nimble(curdir.."/"..nimble..".nimble")
+      local nimblefile = curdir.."/"..nimble..".nimble"
+      local candidate = parse_nimble(nimblefile)
       if type(candidate) == "string" then
-        return candidate
+        return candidate, nimblefile
       end
       if type(sources[nimble]) == "table" and sources[nimble].nim then
-        return curdir.."/"..nimble..".nim"
+        return curdir.."/"..nimble..".nim", nimblefile
       end
     end
     for source, exts in pairs(sources) do

@@ -61,7 +61,7 @@ end
 function on_open(file)
   if file == nil or file.path == nil or #file.path < 5 then return end
   if file.path:sub(-3) == "nim" then
-    file.project = find_projectfile(file.path)
+    file.project, file.nimblefile = find_projectfile(file.path)
     vis:info("'"..file.project.."' used as a projectfile.")
     if sessions[file.project] then
       local cur = sessions[file.project].refcounter

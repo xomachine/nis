@@ -35,6 +35,7 @@ if check_nimsuggest() then
   vis:command_register("nimhelp", get_help)
   vis:command_register("nimcheck", check_it)
   vis:command_register("nimopen", openInProject)
+  vis:command_register("nimble", build)
 
   vis:map(vis.modes.INSERT, "<C- >", suggest_key,
           "Suggest the Nim symbol using nimsuggest.")

@@ -64,7 +64,7 @@ local function stylize(window, data)
             local name = tokens[i]
             local tstyle = styles[name]
             if tstyle ~= nil then
-              table.insert(paints, {start = tstart, finish = tend,
+              table.insert(paints, {start = tstart-1, finish = tend-1,
                            style = tstyle})
             end
           end
@@ -74,7 +74,7 @@ local function stylize(window, data)
         currenttoken = currenttoken..","..style
       else
         --do colorizing according the style
-        table.insert(paints, {start = tokenstart, finish = start,
+        table.insert(paints, {start = tokenstart-1, finish = start-2,
                               style = existent[currenttoken]})
       end
     end
@@ -105,7 +105,7 @@ function stylized_print(notifier, text, append)
   else
     curwin.paints = paints
   end
-  notifier:setText("\n"..cleantext, append)
+  notifier:setText(cleantext, append)
   curwin.triggers.error_highlighter = function(win)
     for _, task in pairs(win.paints) do
       win:style(task.style, task.start, task.finish)
@@ -124,6 +124,10 @@ function convertTermColors(line)
     end
     return ""
   end
-  return line:gsub("{27}%[([0-9]+)m", replacer)
+  return line:gsub("%c", function (a)
+    local code = a:byte()
+    if code == 27 then return "{"..code.."}"
+    else return a end end)
+    :gsub("{27}%[([0-9]+)m", replacer)
 end
 

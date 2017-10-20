@@ -1,4 +1,5 @@
 require('nis.utils')
+require('nis.ui')
 
 function openInProject(argv, force, window)
   -- Suggest to open a file from the project
@@ -10,6 +11,45 @@ function openInProject(argv, force, window)
                                  '; find . -name "*.nim*" | vis-menu -l 10')
   if state == 0 then
     vis:command("o "..dir..result)
+  end
+end
+
+function build(argv, force, window)
+  local file = window.file
+  if not file or not file.project or not file.nimblefile then
+    return
+  end
+  local args = ""
+  for i, arg in ipairs(argv) do
+    args = args .. " " .. arg
+  end
+  local projdir, _ = splitpath(file.nimblefile)
+  if args == "" then args = "build" end
+  local logfile = os.tmpname()
+  local handle = io.popen("cd "..projdir.."; nimble "..args..
+                          " &>"..logfile.."; echo Finish >>"..logfile, "w")
+  local readhandle = io.open(logfile, "r")
+  window.subwindows.buildlog = MessageWindow.new()
+  window.triggers.obtain_build_log = function(w)
+    local summary, line
+    repeat
+      line = readhandle:read("l")
+      if line == "Finish" then
+        readhandle:close()
+        handle:close()
+        os.remove(logfile)
+        w.triggers.obtain_build_log = nil
+        line = nil
+      elseif line ~= nil then
+        summary = summary and summary.."\n"..line or line
+      end
+    until line == nil
+    if summary then
+      summary = convertTermColors(summary)
+      local logwin = w.subwindows.buildlog
+      stylized_print(logwin, summary, true)
+      logwin.win.selection.pos = #logwin.text-1
+    end
   end
 end
 
