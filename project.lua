@@ -1,8 +1,8 @@
 require('nis.utils')
 
-function openInProject()
+function openInProject(argv, force, window)
   -- Suggest to open a file from the project
-  local file = vis.win.file
+  local file = window.file
   if not file or not file.project then return end
   local dir = file.project:match("^(.*/)[^/]+$")
   local empty = {start = 0, finish = 0}
