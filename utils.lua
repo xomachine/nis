@@ -17,14 +17,14 @@ function fileexist(path)
   return false
 end
 
-function register_colors()
+function register_colors(window)
   local holes = {}
   local existant = {}
   local lexer = vis.lexers.load("nim", nil, true)
   for i = 0, 64, 1 do holes[i] = true end
   for name, id in pairs(lexer._TOKENSTYLES) do
     local style = vis.lexers['STYLE_'..name:upper()] or ""
-    vis.win:style_define(id, style)
+    window:style_define(id, style)
     existant[style] = id
     holes[id] = nil
   end
@@ -34,7 +34,7 @@ function register_colors()
       free = freeid
       break
     end
-    if vis.win:style_define(free, k) then
+    if window:style_define(free, k) then
       holes[free] = nil
       t[k] = free
       return free
@@ -43,10 +43,16 @@ function register_colors()
   end})
 end
 
-local function stylize(data)
+local function stylize(window, data)
   local start, finish, capture, style
   local result = data
-  local lexer, existent = register_colors()
+  local lexer, existent
+  if not window.existent then
+    lexer, existent = register_colors(window)
+  else
+    existent = window.existent
+    lexer = vis.lexers.load("nim", nil, true)
+  end
   local styles = lexer._TOKENSTYLES
   local colorizepattern = "\\e%[([^%]]+)%](.-)\\e%[reset%]"
   local paints = {}
@@ -76,6 +82,7 @@ local function stylize(data)
                             style = existent[style]})
     end
   until start == nil
+  window.existent = existent
   return result, paints
 end
 
@@ -112,7 +119,7 @@ function stylized_print(notifier, text)
   notifier:show()
   -- the order matters! stylize needs to have window that it is stylizing in
   -- focus
-  local cleantext, paints = stylize(text)
+  local cleantext, paints = stylize(notifier.win, text)
   notifier:setText("\n"..cleantext)
   local curwin = notifier.win
   local painter = function(win)
