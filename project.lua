@@ -39,7 +39,10 @@ function build(argv, force, window)
                   "; echo 'Build finished' >>"..logfile
   local handle = io.popen(command, "w")
   local readhandle = io.open(logfile, "r")
-  window.subwindows.buildlog = MessageWindow.new()
+  if not window.subwindows.buildlog then
+    window.subwindows.buildlog = MessageWindow.new()
+  end
+  window.subwindows.buildlog:setText("")
   window.triggers.obtain_build_log = function(w)
     local summary, line
     repeat
