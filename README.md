@@ -10,6 +10,7 @@ A Vis plugin that extends Nim language support.
 * The code under cursor documentation viewer on **:nimhelp** command
 * Error highlighting on file save or on **:nimcheck** command
 * Search/open file from the project via **:nimopen** command
+* Project/File building support via **:nimble** command (**:nimble [target]** to perform project build or **:nimble c [options]** to build current file)
 
 *Other features coming soon... or not so soon.*
 
