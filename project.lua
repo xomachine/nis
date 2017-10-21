@@ -27,14 +27,15 @@ function build(argv, force, window)
   if args == "" then args = "build" end
   local logfile = os.tmpname()
   local handle = io.popen("cd "..projdir.."; nimble "..args..
-                          " &>"..logfile.."; echo Finish >>"..logfile, "w")
+                          " &>"..logfile.."; echo 'Build finished' >>"..
+                          logfile, "w")
   local readhandle = io.open(logfile, "r")
   window.subwindows.buildlog = MessageWindow.new()
   window.triggers.obtain_build_log = function(w)
     local summary, line
     repeat
       line = readhandle:read("l")
-      if line == "Finish" then
+      if line == "Build finished" then
         readhandle:close()
         handle:close()
         os.remove(logfile)

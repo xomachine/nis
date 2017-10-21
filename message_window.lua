@@ -39,7 +39,7 @@ function MessageWindow:setText(text, append)
       vis:command("e!")
       self:restoreWin()
     end
-    self.text = (append and self.text or "")..text
+    self.text = (append and self.text or "")..text.."\n"
   end
 end
 
