@@ -2,6 +2,10 @@ require("nis.sessions")
 
 function Session:check()
   self.request = "check"
+  local win = vis.win
+  if win and win.triggers and win.triggers.error_highlighter then
+    win.triggers.error_highlighter = nil
+  end
   self:command("chk", true)
 end
 
