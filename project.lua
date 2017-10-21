@@ -16,19 +16,28 @@ end
 
 function build(argv, force, window)
   local file = window.file
-  if not file or not file.project or not file.nimblefile then
+  if not file or (not file.project and not file.nimblefile) then
     return
   end
   local args = ""
+  local is_compile = {c = true, cc = true, js = true}
+  local withcompile = false
   for i, arg in ipairs(argv) do
+    withcompile = withcompile or is_compile[arg]
     args = args .. " " .. arg
   end
-  local projdir, _ = splitpath(file.nimblefile)
-  if args == "" then args = "build" end
+  local projfile = withcompile and file.path or file.nimblefile or file.path
+  local projdir, _ = splitpath(projfile)
+  if args == "" then
+    args = file.nimblefile and "build" or "c"
+    withcompile = not file.nimblefile
+  end
+  args = args .. " "..(withcompile and projfile or "")
+  local nimc = withcompile and "nim" or "nimble"
   local logfile = os.tmpname()
-  local handle = io.popen("cd "..projdir.."; nimble "..args..
-                          " &>"..logfile.."; echo 'Build finished' >>"..
-                          logfile, "w")
+  local command = "cd "..projdir.."; "..nimc.." "..args.." &>"..logfile..
+                  "; echo 'Build finished' >>"..logfile
+  local handle = io.popen(command, "w")
   local readhandle = io.open(logfile, "r")
   window.subwindows.buildlog = MessageWindow.new()
   window.triggers.obtain_build_log = function(w)
