@@ -1,5 +1,6 @@
 require('nis.utils')
 require('nis.ui')
+require('nis.timer')
 
 function openInProject(argv, force, window)
   -- Suggest to open a file from the project
@@ -39,31 +40,36 @@ function build(argv, force, window)
                   "; echo 'Build finished' >>"..logfile
   local handle = io.popen(command, "w")
   local readhandle = io.open(logfile, "r")
+  local timer = Timer.new()
   if not window.subwindows.buildlog then
     window.subwindows.buildlog = MessageWindow.new()
   end
   window.subwindows.buildlog:setText("")
-  window.triggers.obtain_build_log = function(w)
+  local obtainlog = function(w)
     local summary, line
     repeat
       line = readhandle:read("l")
-      if line == "Build finished" then
-        readhandle:close()
-        handle:close()
-        os.remove(logfile)
-        w.triggers.obtain_build_log = nil
-        line = nil
-      elseif line ~= nil then
-        summary = summary and summary.."\n"..line or line
+      if line then
+        if line:find("Build finished") then
+          readhandle:close()
+          handle:close()
+          os.remove(logfile)
+          timer:cancel()
+          timer:touchafter(function()end) -- just to redraw window one more time
+          line = nil
+        else
+          summary = summary and summary.."\n"..line or line
+        end
       end
     until line == nil
     if summary then
       summary = convertTermColors(summary)
-      local logwin = w.subwindows.buildlog
+      local logwin = window.subwindows.buildlog
       stylized_print(logwin, summary, true)
       logwin.win.selection.pos = #logwin.text-1
     end
   end
+  timer:periodic(obtainlog)
 end
 
 function parse_nimble(path)
