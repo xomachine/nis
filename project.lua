@@ -21,7 +21,7 @@ function build(argv, force, window)
     return
   end
   local args = ""
-  local is_compile = {c = true, cc = true, js = true}
+  local is_compile = {c = true, cc = true, js = true, check = true}
   local withcompile = false
   for i, arg in ipairs(argv) do
     withcompile = withcompile or is_compile[arg]
