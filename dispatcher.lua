@@ -159,10 +159,7 @@ local function highlight_errors(suggestions, window)
     end
     local multiline = message and (message:find("\n") or #message >= win.width)
     if multiline then
-      vis.ignore = true
-      window.subwindows.errormessage:setText(message)
-      window.subwindows.errormessage:showOnBg()
-      vis.ignore = false
+      stylized_print(window.subwindows.errormessage, message)
     elseif message then
       window.subwindows.errormessage:hide()
       vis:info(message)
