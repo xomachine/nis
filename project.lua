@@ -58,6 +58,14 @@ function build(argv, force, window)
           timer:touchafter(function()end) -- just to redraw window one more time
           line = nil
         else
+          line = line:gsub("%[(%w+)%]$", "\\e[fore:cyan][%1]\\e[reset]")
+          line = line:gsub("^([%l/.]+%([%d,%s]+%))",
+                           "\\e[fore:blue]%1\\e[reset]")
+          line = line:gsub("Hint:", "\\e[fore:green]Hint\\e[reset]:")
+          line = line:gsub("Error:", "\\e[fore:red]Error\\e[reset]:")
+          line = line:gsub("Warning:", "\\e[fore:yellow]Error\\e[reset]:")
+          line = line:gsub("got %((.-)%) (but expected) '(.+)'",
+                   "got (\\e[syntax]%1\\e[reset] %2 '\\e[syntax]%3\\e[reset]'")
           summary = summary and summary.."\n"..line or line
         end
       end
