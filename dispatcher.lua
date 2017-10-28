@@ -135,6 +135,9 @@ local function highlight_errors(suggestions, window)
   for _, suggestion in pairs(suggestions) do
     if suggestion.file == window.file.path then
       local style = existent[error_style[suggestion.type].description]
+      if not (suggestion.line and window.file.converter[suggestion.line]) then
+        return
+      end
       local pos = window.file.converter[suggestion.line].start +
         suggestion.column
       local selection = window.file:text_object_word(pos)
