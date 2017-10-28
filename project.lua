@@ -57,6 +57,9 @@ function build(argv, force, window)
           timer:cancel()
           timer:touchafter(function()end) -- just to redraw window one more time
           line = nil
+          local finished = "\n\\e[bold,back:green,fore:white]##-- "..
+                           "[Build finished!] --##\\e[reset]"
+          summary = summary and summary.."\n"..finished or finished
         else
           line = line:gsub("%[(%w+)%]$", "\\e[fore:cyan][%1]\\e[reset]")
           line = line:gsub("^([%l/.]+%([%d,%s]+%))",
