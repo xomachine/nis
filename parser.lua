@@ -24,8 +24,12 @@ function parse_answer(answer)
       "\\e[syntax]%1\\e[reset]")
     suggestion.comment = suggestion.comment:gsub("`([^`]+)`",
       "\\e[fore:green]%1\\e[reset]")
+    local codepattern = "\n..%scode%-?b?l?o?c?k?::%s[Nn][iI][mM]\n(.-)"
     suggestion.comment = suggestion.comment:gsub(
-      "\n..%scode%-?b?l?o?c?k?::%s[Nn][iI][mM]\n(.-)\n\n",
+      codepattern.."\n\n",
+      "\n\n\\e[syntax]%1\\e[reset]\n\n")
+    suggestion.comment = suggestion.comment:gsub(
+      codepattern.."$",
       "\n\n\\e[syntax]%1\\e[reset]\n\n")
   else
     return nil, "not matching request"
