@@ -41,7 +41,9 @@ function build(argv, force, window)
   local handle = io.popen(command, "w")
   local readhandle = io.open(logfile, "r")
   local timer = Timer.new()
-  if not window.subwindows.buildlog then
+  if window.subwindows.buildlog then
+    window.subwindows.buildlog.paints = {}
+  else
     window.subwindows.buildlog = MessageWindow.new()
   end
   window.subwindows.buildlog:setText("")
