@@ -90,6 +90,7 @@ local function suggest(suggestions, window)
   if state == 0 then
     local stripped, forhelper = result:match("^.*%|[^|]+%|[^(]*m%s([^:]+):(.*)")
     if stripped == nil then stripped = result:match("^%s*([^%s]+)%s*$") end
+    if stripped == nil then return end
     if stripped:match("[%$%%%=%<%>%[%]%!%^]") then
       stripped = '`'..stripped..'`' end
     local head = stripped:sub(1, #pattern)
