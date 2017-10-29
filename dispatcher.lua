@@ -95,7 +95,7 @@ local function suggest(suggestions, window)
       stripped = '`'..stripped..'`' end
     local head = stripped:sub(1, #pattern)
     if head ~= pattern then
-      silent_print(head.." ~= "..pattern)
+      vis:info(head.." ~= "..pattern)
       window.selection.pos = wordobject.start
       vis:replace(head)
       local todel = #pattern - #head
@@ -104,6 +104,7 @@ local function suggest(suggestions, window)
         file:delete({start = after, finish = after + todel})
       end
     end
+    window.selection.pos = wordobject.finish
     local residue = stripped:sub(#pattern+1)
     if type(residue) == "string" and #residue > 0 then vis:insert(residue) end
     if forhelper and forhelper:match("%(") then
