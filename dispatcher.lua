@@ -138,7 +138,10 @@ local function highlight_errors(suggestions, window)
     i = i + 1
     pos = pos + length + 1
   end
-  for _, suggestion in pairs(suggestions) do
+  local todo = function () end
+  for i = 1, #suggestions do
+    local suggestion = suggestions[i]
+    todo(suggestion)
     if suggestion.file == window.file.path then
       local style = existent[error_style[suggestion.type].description]
       if not (suggestion.line and window.file.converter[suggestion.line]) then
@@ -149,6 +152,20 @@ local function highlight_errors(suggestions, window)
       local selection = window.file:text_object_word(pos)
       table.insert(errors, {style = style, comment = suggestion.comment,
                             start = selection.start, finish = selection.finish})
+      if suggestion.comment == "template/generic instantiation from here" then
+        local last = #errors
+        local lasttodo = todo
+        todo = function(sug)
+          if lasttodo then lasttodo(sug) end
+          errors[last].comment = errors[last].comment.."\n"..sug.file.."("..
+                                 tostring(sug.line)..","..
+                                 tostring(sug.column)..") "..sug.comment
+        end
+      else
+        todo = function () end
+      end
+    else
+      todo = function () end
     end
   end
   window.triggers.error_highlighter = function(win)
