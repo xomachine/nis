@@ -27,7 +27,7 @@ function Session:command(name, add_position)
   -- Result of the command will returned asyncroniusly
   -- via "NISGOTANSWER" event.
   if io.type(self.write_fd) ~= "file" then
-    silent_print("Nimsuggest crashed somehow! Restarting...")
+    vis:info("Nimsuggest crashed somehow! Restarting...")
     self:restart()
   end
   local filepos = ""
@@ -122,12 +122,14 @@ function Session:cycle()
   if wait_counter == 0 then
     local possibleerror = self.errfifo:read("*a")
     local allcontent = self.outfifo:read("*a")
-    silent_print("Timeout:"..tostring(request).." at "..self.file)
-    silent_print("Last log messages:")
-    silent_print(possibleerror)
-    silent_print("Output buffer content:")
-    silent_print(allcontent)
-    silent_print("Probably nimsuggest crashed... restarting")
+    local fd = assert(io.open("nimsuggest.log", "a"))
+    fd:write("Timeout:"..tostring(request).." at "..self.file.."\n")
+    fd:write("Last log messages:".."\n")
+    fd:write(possibleerror.."\n")
+    fd:write("Output buffer content:".."\n")
+    fd:write(allcontent.."\n")
+    fd:close()
+    vis:info("Probably nimsuggest crashed... restarting")
     self:restart()
   end
   --self.errfifo:truncate()
