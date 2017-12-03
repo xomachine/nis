@@ -42,7 +42,9 @@ function build(argv, force, window)
   local readhandle = io.open(logfile, "r")
   local timer = Timer.new()
   if window.subwindows.buildlog then
-    window.subwindows.buildlog.paints = {}
+    if window.subwindows.buildlog.win then
+      window.subwindows.buildlog.win.paints = {}
+    end
   else
     window.subwindows.buildlog = MessageWindow.new()
   end
