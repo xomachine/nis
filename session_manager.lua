@@ -18,9 +18,11 @@ local function on_brace(session)
 end
 
 local function suggest_dot(session)
-  vis:insert(".")
-  session:suggest()
-  return true
+  if vis.win.file:content(vis.win.selection.pos-1, 1):match("%w") then
+    vis:insert(".")
+    session:suggest()
+    return true
+  else return false end
 end
 
 function check_it()
