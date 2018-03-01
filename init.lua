@@ -8,9 +8,7 @@ end
 
 if check_nimsuggest() then
   require('nis.session_manager')
-  require('nis.dispatcher')
   require('nis.project')
-  events.subscribe("NISGOTANSWER", dispatch)
   events.subscribe(events.FILE_OPEN, on_open)
   events.subscribe(events.FILE_SAVE_POST, check_it)
   events.subscribe(events.QUIT, stop_all)
@@ -36,7 +34,6 @@ if check_nimsuggest() then
   vis:command_register("nimcheck", check_it)
   vis:command_register("nimopen", openInProject)
   vis:command_register("nimble", build)
-
   vis:map(vis.modes.INSERT, "<C- >", suggest_key,
           "Suggest the Nim symbol using nimsuggest.")
 end
