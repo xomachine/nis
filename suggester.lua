@@ -43,7 +43,7 @@ function suggest(suggestions)
     if type(residue) == "string" and #residue > 0 then vis:insert(residue) end
     if forhelper and forhelper:match("%(") then
       vis:insert("(")
-      arghelper({[1] = {type = forhelper}}, window)
+      arghelper({type = forhelper}, window)
     end
     vis.events.emit(vis.events.WIN_HIGHLIGHT, window)
   end
