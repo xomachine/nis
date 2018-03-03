@@ -33,6 +33,7 @@ local todo = function () end
 function on_error(suggestion)
   local window = vis.win
   if not suggestion then window.incomplete = false return end
+  if not window.subwindows then return end
   local lexer, existent = register_colors(window)
   local error_style = graphic.error_style
   if not window.incomplete then

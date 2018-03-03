@@ -1,6 +1,5 @@
 require('nis.utils')
 require('nis.ui')
-require('nis.timer')
 
 function openInProject(argv, force, window)
   -- Suggest to open a file from the project
@@ -35,12 +34,7 @@ function build(argv, force, window)
   end
   args = args .. " "..(withcompile and projfile or "")
   local nimc = withcompile and "nim" or "nimble"
-  local logfile = os.tmpname()
-  local command = "cd "..projdir.."; "..nimc.." "..args.." &>"..logfile..
-                  "; echo 'Build finished' >>"..logfile
-  local handle = io.popen(command, "w")
-  local readhandle = io.open(logfile, "r")
-  local timer = Timer.new()
+  local command = "cd "..projdir.."; "..nimc.." "..args
   if window.subwindows.buildlog then
     if window.subwindows.buildlog.win then
       window.subwindows.buildlog.win.paints = {}
@@ -49,42 +43,34 @@ function build(argv, force, window)
     window.subwindows.buildlog = MessageWindow.new()
   end
   window.subwindows.buildlog:setText("")
-  local obtainlog = function(w)
-    local summary, line
-    repeat
-      line = readhandle:read("l")
-      if line then
-        if line:find("Build finished") then
-          readhandle:close()
-          handle:close()
-          os.remove(logfile)
-          timer:cancel()
-          timer:touchafter(function()end) -- just to redraw window one more time
-          line = nil
-          local finished = "\n\\e[bold,back:green,fore:white]##-- "..
-                           "[Build finished!] --##\\e[reset]"
-          summary = summary and summary.."\n"..finished or finished
+  window.subwindows.buildlog.responce_printer = function(n, d, e)
+    if n == "nisbuild-"..args then
+      local blog = window.subwindows.buildlog
+      if e == "EXIT" or e == "SIGNAL" then
+        if e == "EXIT" and d == 0 then
+          result = "\n\\e[bold,back:green,fore:white]### Build finished ###\\e[reset]\n"
         else
-          line = line:gsub("%[(%w+)%]$", "\\e[fore:cyan][%1]\\e[reset]")
-          line = line:gsub("^([%l/.]+%([%d,%s]+%))",
-                           "\\e[fore:blue]%1\\e[reset]")
-          line = line:gsub("Hint:", "\\e[fore:green]Hint\\e[reset]:")
-          line = line:gsub("Error:", "\\e[fore:red]Error\\e[reset]:")
-          line = line:gsub("Warning:", "\\e[fore:yellow]Error\\e[reset]:")
-          line = line:gsub("got %((.-)%) (but expected) '(.+)'",
-                   "got (\\e[syntax]%1\\e[reset] %2 '\\e[syntax]%3\\e[reset]'")
-          summary = summary and summary.."\n"..line or line
+          result = "\n\\e[bold,back:red,fore:white]### Build failed with "..
+                    e..": "..tostring(d).." ###\\e[reset]\n"
         end
+        vis.events.unsubscribe(vis.events.PROCESS_RESPONCE, blog.responce_printer)
+      else
+        result = d:gsub("%[(%w+)%]$", "\\e[fore:cyan][%1]\\e[reset]")
+        result = result:gsub("^([%l/.]+%([%d,%s]+%))",
+                         "\\e[fore:blue]%1\\e[reset]")
+        result = result:gsub("Hint:", "\\e[fore:green]Hint\\e[reset]:")
+        result = result:gsub("Error:", "\\e[fore:red]Error\\e[reset]:")
+        result = result:gsub("Warning:", "\\e[fore:yellow]Error\\e[reset]:")
+        result = result:gsub("got %((.-)%) (but expected) '(.+)'",
+                 "got (\\e[syntax]%1\\e[reset] %2 '\\e[syntax]%3\\e[reset]'")
       end
-    until line == nil
-    if summary then
-      summary = convertTermColors(summary)
-      local logwin = window.subwindows.buildlog
-      stylized_print(logwin, summary, true)
-      logwin.win.selection.pos = #logwin.text-1
+      result = convertTermColors(result)
+      stylized_print(blog, result, true, true)
+      blog.win.selection.pos = #blog.text-1
     end
   end
-  timer:periodic(obtainlog)
+  vis.events.subscribe(vis.events.PROCESS_RESPONCE, window.subwindows.buildlog.responce_printer)
+  window.subwindows.buildlog.handle = vis:communicate("nisbuild-"..args, command)
 end
 
 function parse_nimble(path)

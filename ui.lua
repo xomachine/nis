@@ -85,7 +85,7 @@ local function stylize(window, data)
   return result, paints
 end
 
-function stylized_print(notifier, text, append)
+function stylized_print(notifier, text, append, nonewline)
   local lastwin = vis.win
   notifier:show()
   -- the order matters! stylize needs to have window that it is stylizing in
@@ -105,7 +105,7 @@ function stylized_print(notifier, text, append)
   else
     curwin.paints = paints
   end
-  notifier:setText(cleantext, append)
+  notifier:setText(cleantext, append, nonewline)
   curwin.triggers.error_highlighter = function(win)
     for _, task in pairs(win.paints) do
       win:style(task.style, task.start, task.finish)

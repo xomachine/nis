@@ -27,10 +27,10 @@ function MessageWindow:isVisible()
   return false
 end
 
-function MessageWindow:setText(text, append)
+function MessageWindow:setText(text, append, nonewline)
   if text ~= self.text or append then
     local fd = io.open(self.file, append and "a" or "w")
-    fd:write(text.."\n")
+    fd:write(text..(nonewline and "" or "\n"))
     fd:flush()
     fd:close()
     if self:isVisible() then
@@ -39,7 +39,7 @@ function MessageWindow:setText(text, append)
       vis:command("e!")
       self:restoreWin()
     end
-    self.text = (append and self.text or "")..text.."\n"
+    self.text = (append and self.text or "")..text..(nonewline and "" or "\n")
   end
 end
 
