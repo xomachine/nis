@@ -7,10 +7,11 @@ require("nis.message_window")
 
 
 local function gotodef (s)
+  if s == nil then return end
   if s.file ~= vis.win.file.path then
     vis:command("open "..s.file)
   end
-  vis.win.selection:to(s.line, s.colomn)
+  vis.win.selection:to(s.line, s.column)
 end
 
 local function help(s, ctx)
