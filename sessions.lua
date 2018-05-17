@@ -10,7 +10,9 @@ function Session:close()
   -- Closes current nimsuggest session and removes all
   -- related temporary files
   --silent_print("Closing session for "..self.file)
-  self:command("quit")
+  if io.type(self.write_fd) == "file" then
+    self:command("quit")
+  end
   os.remove(self.dirty)
   self.write_fd:close()
   vis.events.unsubscribe(vis.events.PROCESS_RESPONCE, self.on_responce)
