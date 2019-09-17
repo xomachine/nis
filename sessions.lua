@@ -11,11 +11,11 @@ function Session:close()
   -- related temporary files
   --silent_print("Closing session for "..self.file)
   if io.type(self.write_fd) == "file" then
-    self:command("quit")
+    --self:command("quit")
+    self.write_fd:close()
   end
-  os.remove(self.dirty)
-  self.write_fd:close()
   vis.events.unsubscribe(vis.events.PROCESS_RESPONCE, self.on_responce)
+  os.remove(self.dirty)
 end
 
 function Session:command(name, add_position)
@@ -41,13 +41,13 @@ function Session:command(name, add_position)
     end
     local path = vis.win.file.path
     local sel = vis.win.selection
-    filepos = " "..path..';'..(dirty and self.dirty or path)..':'..
+    filepos = " "..path..(dirty and ';'..self.dirty or '')..':'..
               tostring(sel.line)..':'..tostring(sel.col-1)
   end
   local request = name..filepos.."\n"
   self.write_fd:write(request)
   self.write_fd:flush() -- needed to push request forward to nimsuggest
-  --silent_print("Sent to nimsuggest: "..request)
+--  silent_print("Sent to nimsuggest: "..request)
   if dirty then os.remove(dirty) end
 end
 
@@ -64,22 +64,25 @@ function Session.new(filepath)
   -- Creates new nimsuggest session for given file.
   -- This constructor either launches nimsuggest and
   -- prepares all necessary async IO handlers.
-  local newtable = setmetatable({}, {__index = Session})
+  local newtable = setmetatable({
+    request = false,
+  }, {__index = Session})
   newtable:init(filepath)
   return newtable
 end
 
 function Session:init(filepath)
-  self.request = false
   self.file = filepath
   self.dirty = os.tmpname()
   self.name = "nis-"..self.dirty
-  self.on_responce = genOnResponce(self.name)
+  self.on_responce = genOnResponce(self.name, function()
+    self:close()
+  end)
   vis.events.subscribe(vis.events.PROCESS_RESPONCE, self.on_responce)
   -- setsid is necessary to prevent SIGINT forwarding from vis when Ctrl-C
   -- pressed
   --silent_print("Session created with name "..self.name.." for file "..self.file)
   self.write_fd = assert(vis:communicate(self.name,
-    'setsid -w nimsuggest --tester '..self.file))
+    'setsid -w nimsuggest --tester --refresh --maxresults:1000 '..self.file))
 end
 

@@ -77,7 +77,7 @@ local function stdouthandler(a, ctx)
   end
 end
 
-function genOnResponce(name)
+function genOnResponce(name, hangcb)
   local context = {
     residue = "", -- string residue from previous incomplete string
     incomplete = false, -- next help message can be applied to previous
@@ -89,10 +89,32 @@ function genOnResponce(name)
     SIGNAL = function (a) end,
     EXIT = function (a) end,
   }
+  local counter = 0
+  local warnings = 0
+  local lasttime = os.time()
   return function (n, d, e)
+--    silent_print("Answer for "..tostring(n)..": "..tostring(d).." from "..e)
     if n == name then
-      -- silent_print("Answer: "..tostring(d).." from "..e)
       variants[e](d, context)
+    end
+    if type(d) == 'string' then
+      counter = counter + #d
+      if counter > 10240 then
+        local tm = os.time()
+        if tm == lasttime then
+          warnings = warnings + 1
+          tm = tm + 1
+        else
+          warnings = 0
+        end
+        if warnings > 1 then
+          vis:info('Nimsuggest spamming too much! Restarting...')
+          hangcb()
+          warnings = 0
+        end
+        lasttime = tm
+        counter = 0
+      end
     end
   end
 end
